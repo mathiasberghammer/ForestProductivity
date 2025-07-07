@@ -121,18 +121,20 @@
       <main class="flex-1 h-screen overflow-hidden bg-amber-500">
         <div class="h-full overflow-y-auto p-8 scrollbar-thin scrollbar-thumb-amber-300 scrollbar-track-transparent">
           <router-view 
-        :trees="trees"
-        :tasks="tasks"
-        @tree-grown="handleTreeGrown"
-        @task-created="handleTaskCreated"
-        @task-updated="handleTaskUpdated"
-        @task-deleted="handleTaskDeleted"
-        @task-completed="handleTaskCompleted"
-        @focus-time-updated="handleFocusTimeUpdated"
-        @focus-state-changed="handleFocusUpdated"
-        @folder-created="handleFolderCreated"
-        @folder-deleted="handleFolderDeleted"
-          />
+  :trees="trees"
+  :tasks="tasks"
+  :folder-focus-time="folderFocusTime"
+  :focus-sessions="focusSessions"
+  @tree-grown="handleTreeGrown"
+  @task-created="handleTaskCreated"
+  @task-updated="handleTaskUpdated"
+  @task-deleted="handleTaskDeleted"
+  @task-completed="handleTaskCompleted"
+  @focus-time-updated="handleFocusTimeUpdated"
+  @focus-state-changed="handleFocusUpdated"
+  @folder-created="handleFolderCreated"
+  @folder-deleted="handleFolderDeleted"
+/>
         </div>
       </main>
     </div>
@@ -140,46 +142,78 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+// Complete corrected script section for App.vue
+
+import { ref, computed, onMounted, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
 
-// Icon components
+// Fixed icon components using render functions
 const TimerIcon = {
-  template: `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/>
-      <polyline points="12,6 12,12 16,14"/>
-    </svg>
-  `
+  render() {
+    return h('svg', {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      strokeWidth: '2'
+    }, [
+      h('circle', { cx: '12', cy: '12', r: '10' }),
+      h('polyline', { points: '12,6 12,12 16,14' })
+    ])
+  }
 }
 
 const TasksIcon = {
-  template: `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M9 11l3 3L22 4"/>
-      <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
-    </svg>
-  `
+  render() {
+    return h('svg', {
+      viewBox: '0 0 24 24',
+      fill: 'none',
+      stroke: 'currentColor',
+      strokeWidth: '2'
+    }, [
+      h('path', { d: 'M9 11l3 3L22 4' }),
+      h('path', { d: 'M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11' })
+    ])
+  }
 }
 
 const ForestIcon = {
-  template: `
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2L8 8h8l-4-6z"/>
-      <path d="M10 8L6 14h12l-4-6H10z" opacity="0.8"/>
-      <rect x="11" y="14" width="2" height="8" opacity="0.6"/>
-    </svg>
-  `
+  render() {
+    return h('svg', {
+      viewBox: '0 0 24 24',
+      fill: 'currentColor'
+    }, [
+      h('path', { d: 'M12 2L8 8h8l-4-6z' }),
+      h('path', { d: 'M10 8L6 14h12l-4-6H10z', opacity: '0.8' }),
+      h('rect', { x: '11', y: '14', width: '2', height: '8', opacity: '0.6' })
+    ])
+  }
 }
 
 // Reactive data
 const trees = ref([])
 const tasks = ref([])
-const totalFocusTime = ref(0)
 const focusing = ref(false)
+const folderFocusTime = ref({})
+const focusSessions = ref([])
+
+// Computed properties (don't try to write to these)
+const totalFocusTime = computed(() => {
+  return focusSessions.value.reduce((total, session) => {
+    const duration = typeof session.duration === 'string' 
+      ? parseInt(session.duration, 10) 
+      : (session.duration || 0)
+    return total + duration
+  }, 0)
+})
+
+const totalTrees = computed(() => trees.value.length)
+const totalFocusHours = computed(() => Math.floor(totalFocusTime.value / 3600))
+const completedTasksCount = computed(() => {
+  return tasks.value.filter(task => task.completed).length
+})
 
 // Navigation items
 const navItems = [
@@ -188,84 +222,65 @@ const navItems = [
   { id: 'forest', label: 'My Forest', icon: ForestIcon }
 ]
 
-// Computed properties
-const totalTrees = computed(() => trees.value.length)
-const totalFocusHours = computed(() => Math.floor(totalFocusTime.value / 3600))
-
-const todayTasksCount = computed(() => {
-  return tasks.value.filter(task => !task.completed).length
-})
-
-const completedTasksCount = computed(() => {
-  return tasks.value.filter(task => task.completed).length
-})
+// Event handlers - FIXED: Don't assign to computed properties
+const handleFocusTimeUpdated = (focusTime, folderId = null) => {
+  console.log('=== FOCUS TIME UPDATE ===')
+  console.log('Received focusTime:', focusTime, 'seconds')
+  console.log('Received folderId:', folderId)
+  
+  // IMPORTANT: Ensure focusTime is a number
+  const duration = typeof focusTime === 'string' ? parseInt(focusTime, 10) : focusTime
+  
+  // Track focus session (regardless of trees grown)
+  if (duration > 0) {
+    const session = {
+      id: Date.now() + Math.random(),
+      duration: duration, // Store as number, not string
+      folderId: folderId,
+      completedAt: new Date().toISOString(),
+      source: 'timer'
+    }
+    focusSessions.value.push(session)
+    console.log('Added session:', session)
+  }
+  
+  // Track focus time per folder
+  if (folderId && duration > 0) {
+    if (!folderFocusTime.value[folderId]) {
+      folderFocusTime.value[folderId] = 0
+    }
+    
+    // IMPORTANT: Ensure we're adding numbers, not strings
+    const currentTime = typeof folderFocusTime.value[folderId] === 'string' 
+      ? parseInt(folderFocusTime.value[folderId], 10) 
+      : folderFocusTime.value[folderId]
+    
+    folderFocusTime.value[folderId] = currentTime + duration
+    
+    console.log(`Folder ${folderId} time: ${currentTime} + ${duration} = ${folderFocusTime.value[folderId]} seconds`)
+    
+    // Save to localStorage
+    localStorage.setItem('folderFocusTime', JSON.stringify(folderFocusTime.value))
+  }
+  
+  console.log('Current folderFocusTime:', folderFocusTime.value)
+  console.log('Total focus sessions:', focusSessions.value.length)
+  console.log('=== END FOCUS TIME UPDATE ===')
+  
+  saveData()
+}
 
 // Navigation handler
 const handleNavClick = (event, itemId) => {
-  // Only block navigation if we're currently on the timer page AND actively focusing AND trying to go to a different page
   if (focusing.value && route.name === 'timer' && itemId !== 'timer') {
     event.preventDefault()
     event.stopPropagation()
     console.log('Navigation blocked - Focus mode is active')
     return false
   }
-  // Otherwise, let the router-link handle navigation normally
 }
 
-// Profile reset functionality
-const confirmResetProfile = () => {
-  const confirmMessage = `⚠️ WARNING: This will permanently delete ALL your data:
-
-• ${totalTrees.value} trees in your forest
-• ${tasks.value.length} tasks (active and completed)  
-• ${totalFocusHours.value} hours of focus time
-• All folders and progress
-
-This action cannot be undone. Are you absolutely sure?`
-
-  if (confirm(confirmMessage)) {
-    // Double confirmation for safety
-    if (confirm("Last chance! Are you really sure you want to delete everything and start fresh?")) {
-      resetProfile()
-    }
-  }
-}
-
-const resetProfile = async () => {
-  try {
-    // Clear all reactive data
-    trees.value = []
-    tasks.value = []
-    totalFocusTime.value = 0
-    focusing.value = false
-
-    // Clear storage
-    if (window.electronAPI) {
-      await window.electronAPI.store.clear()
-    } else {
-      // Clear all localStorage items related to the app
-      localStorage.removeItem('forestApp_trees')
-      localStorage.removeItem('forestApp_tasks')
-      localStorage.removeItem('forestApp_totalFocusTime')
-      localStorage.removeItem('taskFolders')
-      localStorage.removeItem('focusSessionHistory')
-    }
-
-    // Redirect to timer page
-    if (route.name !== 'timer') {
-      router.push({ name: 'timer' })
-    }
-
-    console.log('Profile reset successfully')
-    alert('Profile reset successfully! Starting fresh.')
-    
-  } catch (error) {
-    console.error('Error resetting profile:', error)
-    alert('Error resetting profile. Please try again.')
-  }
-}
-
-// Event handlers
+// Other event handlers remain the same...
 const handleTreeGrown = (treeData) => {
   const newTree = {
     id: Date.now() + Math.random(),
@@ -273,7 +288,7 @@ const handleTreeGrown = (treeData) => {
     grownAt: new Date().toISOString(),
     duration: treeData.duration || 0,
     source: treeData.source || 'timer',
-    taskId: treeData.taskId || null
+    folderId: treeData.folderId || null
   }
   trees.value.push(newTree)
   saveData()
@@ -311,13 +326,11 @@ const handleTaskDeleted = (taskId) => {
   saveData()
 }
 
-// Handle task completion from focus timer
 const handleTaskCompleted = (taskId) => {
   console.log('Task completed from focus timer:', taskId)
   
   const taskIndex = tasks.value.findIndex(task => task.id === taskId)
   if (taskIndex !== -1) {
-    // Mark the task as completed
     tasks.value[taskIndex] = {
       ...tasks.value[taskIndex],
       completed: true,
@@ -326,54 +339,45 @@ const handleTaskCompleted = (taskId) => {
     
     console.log('Task marked as completed:', tasks.value[taskIndex])
     saveData()
-    
-    // Optional: Show a success message
     showTaskCompletionMessage(tasks.value[taskIndex].title)
   }
 }
 
-// Optional: Show completion message
 const showTaskCompletionMessage = (taskTitle) => {
-  // You can implement a toast notification here if you want
   console.log(`Task "${taskTitle}" has been moved to archive!`)
 }
 
-// Fixed focus handling - expecting a boolean value, not an object
 const handleFocusUpdated = (isFocusing) => {
   console.log('Focus state updated:', isFocusing)
   focusing.value = isFocusing
   saveData()
 }
 
-const handleFocusTimeUpdated = (seconds) => {
-  totalFocusTime.value += seconds
-  saveData()
-}
-
-// Folder event handlers
 const handleFolderCreated = (folderData) => {
-  // Folders are managed in the TodoList component, no action needed here
   console.log('Folder created:', folderData)
 }
 
 const handleFolderDeleted = (folderId) => {
-  // Remove any tasks that belonged to the deleted folder
   tasks.value = tasks.value.filter(task => task.folderId !== folderId)
   saveData()
   console.log('Folder deleted:', folderId)
 }
 
-// Data persistence
+// Data persistence - FIXED: Don't save computed values
 const saveData = async () => {
   try {
     if (window.electronAPI) {
       await window.electronAPI.store.set('trees', trees.value)
       await window.electronAPI.store.set('tasks', tasks.value)
-      await window.electronAPI.store.set('totalFocusTime', totalFocusTime.value)
+      // Don't save totalFocusTime - it's computed from focusSessions
+      await window.electronAPI.store.set('folderFocusTime', folderFocusTime.value)
+      await window.electronAPI.store.set('focusSessions', focusSessions.value)
     } else {
       localStorage.setItem('forestApp_trees', JSON.stringify(trees.value))
       localStorage.setItem('forestApp_tasks', JSON.stringify(tasks.value))
-      localStorage.setItem('forestApp_totalFocusTime', totalFocusTime.value.toString())
+      // Don't save totalFocusTime - it's computed from focusSessions
+      localStorage.setItem('forestApp_folderFocusTime', JSON.stringify(folderFocusTime.value))
+      localStorage.setItem('forestApp_focusSessions', JSON.stringify(focusSessions.value))
     }
   } catch (error) {
     console.error('Error saving data:', error)
@@ -385,39 +389,88 @@ const loadData = async () => {
     if (window.electronAPI) {
       const savedTrees = await window.electronAPI.store.get('trees') || []
       const savedTasks = await window.electronAPI.store.get('tasks') || []
-      const savedFocusTime = await window.electronAPI.store.get('totalFocusTime') || 0
+      const savedFolderFocusTime = await window.electronAPI.store.get('folderFocusTime') || {}
+      const savedFocusSessions = await window.electronAPI.store.get('focusSessions') || []
       
       trees.value = savedTrees
       tasks.value = savedTasks
-      totalFocusTime.value = savedFocusTime
+      folderFocusTime.value = savedFolderFocusTime
+      focusSessions.value = savedFocusSessions
+      // Don't load totalFocusTime - it's computed
     } else {
       const savedTrees = localStorage.getItem('forestApp_trees')
       const savedTasks = localStorage.getItem('forestApp_tasks')
-      const savedFocusTime = localStorage.getItem('forestApp_totalFocusTime')
+      const savedFolderFocusTime = localStorage.getItem('forestApp_folderFocusTime')
+      const savedFocusSessions = localStorage.getItem('forestApp_focusSessions')
       
       if (savedTrees) trees.value = JSON.parse(savedTrees)
       if (savedTasks) tasks.value = JSON.parse(savedTasks)
-      if (savedFocusTime) totalFocusTime.value = parseInt(savedFocusTime)
+      if (savedFolderFocusTime) folderFocusTime.value = JSON.parse(savedFolderFocusTime)
+      if (savedFocusSessions) focusSessions.value = JSON.parse(savedFocusSessions)
+      // Don't load totalFocusTime - it's computed
     }
   } catch (error) {
     console.error('Error loading data:', error)
   }
 }
 
-// Global navigation guard
+// Reset function - FIXED
+const confirmResetProfile = () => {
+  const confirmMessage = `⚠️ WARNING: This will permanently delete ALL your data:
+
+• ${totalTrees.value} trees in your forest
+• ${tasks.value.length} tasks (active and completed)  
+• ${totalFocusHours.value} hours of focus time
+• All folders and progress
+
+This action cannot be undone. Are you absolutely sure?`
+
+  if (confirm(confirmMessage)) {
+    if (confirm("Last chance! Are you really sure you want to delete everything and start fresh?")) {
+      resetProfile()
+    }
+  }
+}
+
+const resetProfile = async () => {
+  try {
+    // Clear all reactive data
+    trees.value = []
+    tasks.value = []
+    focusing.value = false
+    folderFocusTime.value = {}
+    focusSessions.value = []
+    // Don't clear totalFocusTime - it's computed
+
+    // Clear storage
+    if (window.electronAPI) {
+      await window.electronAPI.store.clear()
+    } else {
+      localStorage.removeItem('forestApp_trees')
+      localStorage.removeItem('forestApp_tasks')
+      localStorage.removeItem('forestApp_totalFocusTime') // Remove this from storage
+      localStorage.removeItem('forestApp_folderFocusTime')
+      localStorage.removeItem('forestApp_focusSessions')
+      localStorage.removeItem('taskFolders')
+      localStorage.removeItem('focusSessionHistory')
+    }
+  } catch (error) {
+    console.error('Error resetting profile:', error)
+    alert('Error resetting profile. Please try again.')
+  }
+}
+
+// Lifecycle hooks
 onMounted(() => {
   loadData()
   
-  // Add a global router guard to prevent navigation during focus
   router.beforeEach((to, from, next) => {
-    // Only block navigation if we're currently on the timer page AND actively focusing
     if (focusing.value && from.name === 'timer' && to.name !== from.name) {
       console.log('Router guard blocking navigation from timer while focusing')
-      next(false) // Block navigation
+      next(false)
     } else {
-      next() // Allow navigation
+      next()
     }
   })
 })
-
 </script>
