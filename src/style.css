@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom component classes using your earth tone colors */
+@layer components {
+  .btn-primary {
+    @apply bg-olive-500 hover:bg-olive-600 text-cream-50 font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:-translate-y-0.5;
+  }
+
+  .btn-secondary {
+    @apply bg-cream-100 hover:bg-tan-200 text-forest-500 border border-tan-300 font-semibold py-3 px-6 rounded-lg transition-all duration-200;
+  }
+
+  .btn-success {
+    @apply bg-forest-500 hover:bg-forest-600 text-cream-50 font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+  }
+
+  .btn-danger {
+    @apply bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+  }
+
+  .btn-earth {
+    @apply bg-brown-400 hover:bg-brown-500 text-cream-50 font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+  }
+
+  .card {
+    @apply bg-white border border-tan-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  .card-earth {
+    @apply bg-cream-50 border border-tan-300 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border border-tan-300 rounded-lg focus:ring-2 focus:ring-olive-500 focus:border-olive-500 outline-none transition-all duration-200 bg-white;
+  }
+
+  .select-field {
+    @apply px-4 py-3 border border-tan-300 rounded-lg focus:ring-2 focus:ring-olive-500 focus:border-olive-500 outline-none transition-all duration-200 bg-white;
+  }
+
+  .textarea-field {
+    @apply w-full px-4 py-3 border border-tan-300 rounded-lg focus:ring-2 focus:ring-olive-500 focus:border-olive-500 outline-none transition-all duration-200 bg-white resize-none;
+  }
+
+  /* Priority badges */
+  .priority-high {
+    @apply bg-red-100 text-red-700 border border-red-200 px-2 py-1 rounded-md text-xs font-semibold uppercase tracking-wide;
+  }
+
+  .priority-medium {
+    @apply bg-tan-100 text-tan-700 border border-tan-200 px-2 py-1 rounded-md text-xs font-semibold uppercase tracking-wide;
+  }
+
+  .priority-low {
+    @apply bg-olive-100 text-olive-700 border border-olive-200 px-2 py-1 rounded-md text-xs font-semibold uppercase tracking-wide;
+  }
+
+  /* Status indicators */
+  .status-active {
+    @apply bg-olive-500 text-white px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .status-paused {
+    @apply bg-tan-400 text-white px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .status-completed {
+    @apply bg-forest-500 text-white px-3 py-1 rounded-full text-xs font-semibold;
+  }
+}
+
+/* Custom scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #dda15e; /* tan-300 */
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #bc6c25; /* brown-400 */
+}
+
+/* Custom width for sidebar */
+.w-80 {
+  width: 20rem;
+}
+
+/* Router link active styles */
+.router-link-active {
+  @apply bg-olive-500 text-white;
+}
