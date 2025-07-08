@@ -126,7 +126,7 @@
                 </div>
                 <div v-if="isRunning" class="text-xs text-stone-500 mt-1">
                   Trees grown:
-                  {{ Math.floor((selectedDuration - timeLeft) / 60) }}
+                  {{ Math.floor((selectedDuration - timeLeft) / 3600) }}
                   <!-- Change from 3600 to 60 -->
                 </div>
               </div>
@@ -186,29 +186,28 @@
               </div>
             </div>
 
-            <!-- Slider -->
-            <div class="relative px-6 mb-8">
-              <input
-                type="range"
-                v-model="selectedDuration"
-                :min="1 * 60"
-                :max="5 * 60"
-                :step="1 * 60"
-                class="w-full h-3 bg-stone-200 rounded-lg appearance-none cursor-pointer slider"
-                @input="updateTimeLeft"
-              />
+<!-- Slider -->
+<div class="relative px-6 mb-8">
+  <input
+    type="range"
+    v-model="selectedDuration"
+    :min="1 * 60 * 60"
+    :max="4 * 60 * 60"
+    :step="1 * 60 * 60"
+    class="w-full h-3 bg-stone-200 rounded-lg appearance-none cursor-pointer slider"
+    @input="updateTimeLeft"
+  />
 
-              <!-- Slider Labels -->
-              <div
-                class="flex justify-between text-xs text-stone-600 mt-2 px-2"
-              >
-                <span>1 min</span>
-                <span>2 min</span>
-                <span>3 min</span>
-                <span>4 min</span>
-                <span>5 min</span>
-              </div>
-            </div>
+  <!-- Slider Labels -->
+  <div
+    class="flex justify-between text-xs text-stone-600 mt-2 px-2"
+  >
+    <span>1 hour</span>
+    <span>2 hours</span>
+    <span>3 hours</span>
+    <span>4 hours</span>
+  </div>
+</div>
 
             <!-- Start Focus Button -->
             <div class="text-center">
@@ -419,7 +418,7 @@ const props = defineProps({
 });
 
 // Reactive state
-const selectedDuration = ref(1 * 60); // Change from 60 * 60 to 1 * 60 (1 minute default)
+const selectedDuration = ref(1 * 60 * 60); 
 const timeLeft = ref(selectedDuration.value);
 const isRunning = ref(false);
 const treesGrownThisSession = ref(0);
@@ -431,112 +430,7 @@ let timerId = null;
 // Add these to your reactive state section:
 const showDebugControls = ref(true); // Set to false in production
 
-// Add these debug methods to your script:
 
-const debugAddTree = () => {
-  console.log("🐛 Debug: Adding tree manually");
-
-  // Use the current selected folder or default to first available
-  const folderId =
-    selectedFolderId.value ||
-    (availableFolders.value.length > 0
-      ? availableFolders.value[0].id
-      : "debug");
-
-  emit("tree-grown", {
-    type: selectedTreeType.value,
-    treeType: selectedTreeType.value,
-    duration: 60, // 1 minute tree
-    source: "debug",
-    folderId: folderId,
-    grownAt: new Date().toISOString(),
-  });
-
-  // Show feedback
-  showDebugNotification("🌳 Debug tree added!");
-};
-
-const debugAddMultipleTrees = () => {
-  console.log("🐛 Debug: Adding 5 trees");
-
-  const folderId =
-    selectedFolderId.value ||
-    (availableFolders.value.length > 0
-      ? availableFolders.value[0].id
-      : "debug");
-
-  // Add 5 trees with slight delays to see them grow
-  for (let i = 0; i < 5; i++) {
-    setTimeout(() => {
-      emit("tree-grown", {
-        type: selectedTreeType.value,
-        treeType: selectedTreeType.value,
-        duration: 60,
-        source: "debug-bulk",
-        folderId: folderId,
-        grownAt: new Date().toISOString(),
-      });
-    }, i * 200); // 200ms delay between each tree
-  }
-
-  showDebugNotification("🌲 Added 5 debug trees!");
-};
-
-const debugCompleteSession = () => {
-  console.log("🐛 Debug: Simulating completed session");
-
-  const folderId =
-    selectedFolderId.value ||
-    (availableFolders.value.length > 0
-      ? availableFolders.value[0].id
-      : "debug");
-
-  // Simulate a 5-minute completed session
-  const sessionDuration = 5 * 60; // 5 minutes
-  const treesToGrow = Math.floor(sessionDuration / 60); // 5 trees
-
-  // Grow all the trees
-  for (let i = 0; i < treesToGrow; i++) {
-    setTimeout(() => {
-      emit("tree-grown", {
-        type: selectedTreeType.value,
-        treeType: selectedTreeType.value,
-        duration: 60,
-        source: "debug-session",
-        folderId: folderId,
-        grownAt: new Date().toISOString(),
-      });
-    }, i * 100);
-  }
-
-  // Emit the focus time update
-  setTimeout(() => {
-    emit("focus-time-updated", sessionDuration, folderId);
-    showDebugNotification(
-      `⏱️ Simulated ${formatDuration(
-        sessionDuration
-      )} focus session with ${treesToGrow} trees!`
-    );
-  }, treesToGrow * 100 + 500);
-};
-
-const showDebugNotification = (message) => {
-  // Create a temporary debug notification
-  const notification = document.createElement("div");
-  notification.innerHTML = `
-    <div class="fixed top-4 left-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce border-2 border-red-600">
-      🐛 ${message}
-    </div>
-  `;
-  document.body.appendChild(notification);
-
-  // Remove notification after 3 seconds
-  setTimeout(() => {
-    if (notification.parentNode) {
-      notification.parentNode.removeChild(notification);
-    }
-  }, 3000);
-};
 
 // Constants
 const circumference = 2 * Math.PI * 65; // radius = 65
@@ -797,12 +691,12 @@ const startTimer = () => {
 
       // Check if a minute (60 seconds) has passed and grow a tree
       const elapsed = selectedDuration.value - timeLeft.value;
-      const minutesCompleted = Math.floor(elapsed / 60); // Change from 3600 to 60 (1 minute = 60 seconds)
+const hoursCompleted = Math.floor(elapsed / 3600); // 1 hour = 3600 seconds
 
-      if (minutesCompleted > treesGrownThisSession.value) {
-        treesGrownThisSession.value = minutesCompleted;
-        growTree();
-      }
+if (hoursCompleted > treesGrownThisSession.value) {
+  treesGrownThisSession.value = hoursCompleted;
+  growTree();
+}
     } else {
       finishSession();
     }
@@ -820,9 +714,9 @@ const stopTimer = () => {
   emit("focus-state-changed", false);
 
   // If we focused for at least 1 minute, grow a tree and record the session
-  if (elapsedTime >= 60) {
-    // 1 minute = 60 seconds
-    const treesToGrow = Math.floor(elapsedTime / 60);
+  if (elapsedTime >= 3600) {
+  // 1 hour = 3600 seconds
+  const treesToGrow = Math.floor(elapsedTime / 3600);
 
     // Grow any remaining trees that haven't been grown yet
     for (let i = treesGrownThisSession.value; i < treesToGrow; i++) {
@@ -909,7 +803,7 @@ const finishSession = () => {
   treesGrownThisSession.value = 0;
 
   // Show success notification
-  const treesGrown = Math.floor(selectedDuration.value / 60); // Calculate trees grown
+  const treesGrown = Math.floor(selectedDuration.value / 3600); // Calculate trees grown (1 tree per hour)
   showSuccessNotification(treesGrown);
 };
 
@@ -917,7 +811,7 @@ const growTree = () => {
   emit("tree-grown", {
     type: selectedTreeType.value, // Keep this for backward compatibility
     treeType: selectedTreeType.value, // Add this for consistency
-    duration: 60,
+    duration: 3600, // 1 hour = 3600 seconds
     source: "timer",
     folderId: selectedFolderId.value,
     grownAt: new Date().toISOString(), // Add timestamp
