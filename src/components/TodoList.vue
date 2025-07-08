@@ -21,11 +21,16 @@
                 class="flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 font-medium"
                 :class="[
                   selectedFolderId === folder.id
-                    ? 'bg-amber-500 text-stone-900 shadow-lg'
-                    : 'bg-white/40 text-stone-700 hover:bg-white/60'
+                    ? 'text-stone-900 shadow-lg'
+                    : 'text-stone-700 hover:bg-white/60'
                 ]"
+                :style="{ 
+                  backgroundColor: selectedFolderId === folder.id 
+                    ? getFolderColor(folder).bg 
+                    : 'rgba(255, 255, 255, 0.4)' 
+                }"
               >
-                <span class="text-lg">📁</span>
+                <span class="text-lg">{{ getFolderColor(folder).emoji }}</span>
                 <span>{{ folder.name }}</span>
                 <span class="text-xs opacity-75">({{ getFolderTaskCount(folder.id) }})</span>
               </button>
@@ -33,24 +38,44 @@
 
             <!-- Add Folder Button -->
             <div class="flex items-center gap-3">
-              <div v-if="showAddFolder" class="flex items-center gap-2">
+              <div v-if="showAddFolder" class="flex items-center gap-2 bg-white/80 backdrop-blur-sm p-3 rounded-xl border border-white/60">
                 <input
                   v-model="newFolderName"
                   @keyup.enter="addFolder"
                   @keyup.esc="cancelAddFolder"
                   placeholder="Folder name"
-                  class="px-3 py-2 bg-white/80 backdrop-blur-sm border border-white/60 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none text-sm"
+                  class="px-3 py-2 bg-white/60 border border-white/40 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-sm min-w-32"
                   ref="folderInput"
                 >
+                
+                <!-- Color Selector -->
+                <div class="flex items-center gap-1">
+                  <button
+                    v-for="color in folderColors"
+                    :key="color.value"
+                    @click="newFolderColor = color.value"
+                    class="w-6 h-6 rounded-lg border-2 transition-all duration-200 hover:scale-110"
+                    :class="[
+                      newFolderColor === color.value 
+                        ? 'border-stone-800 ring-2 ring-stone-400' 
+                        : 'border-white/60'
+                    ]"
+                    :style="{ backgroundColor: color.bg }"
+                    :title="color.name"
+                  >
+                    <span class="text-xs">{{ color.emoji }}</span>
+                  </button>
+                </div>
+                
                 <button
                   @click="addFolder"
-                  class="bg-amber-500 hover:bg-amber-600 text-stone-900 font-medium py-2 px-3 rounded-xl transition-all duration-200 text-sm"
+                  class="bg-amber-500 hover:bg-amber-600 text-stone-900 font-medium py-2 px-3 rounded-lg transition-all duration-200 text-sm"
                 >
                   Add
                 </button>
                 <button
                   @click="cancelAddFolder"
-                  class="bg-white/60 hover:bg-white/80 text-stone-700 font-medium py-2 px-3 rounded-xl transition-all duration-200 text-sm"
+                  class="bg-white/60 hover:bg-white/80 text-stone-700 font-medium py-2 px-3 rounded-lg transition-all duration-200 text-sm"
                 >
                   Cancel
                 </button>
@@ -80,8 +105,11 @@
         <!-- Folder Header -->
         <div class="flex items-center justify-between mb-8">
           <div class="flex items-center gap-4">
-            <div class="w-16 h-16 bg-amber-500 rounded-2xl flex items-center justify-center text-stone-800 shadow-lg">
-              <span class="text-3xl">📁</span>
+            <div 
+              class="w-16 h-16 rounded-2xl flex items-center justify-center text-stone-800 shadow-lg"
+              :style="{ backgroundColor: getFolderColor(selectedFolder).bg }"
+            >
+              <span class="text-3xl">{{ getFolderColor(selectedFolder).emoji }}</span>
             </div>
             <div>
               <h2 class="text-3xl font-bold text-stone-900">{{ selectedFolder.name }}</h2>
@@ -94,6 +122,15 @@
           
           <!-- Folder Actions -->
           <div class="flex items-center gap-3">
+            <button
+              v-if="!showingArchive"
+              @click="openAddTaskPopup"
+              class="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-stone-900 rounded-xl transition-all duration-200 font-medium"
+              title="Add New Tasks"
+            >
+              <span class="text-lg">➕</span>
+              <span>Add Tasks</span>
+            </button>
             <button
               @click="toggleArchive"
               class="flex items-center gap-2 px-4 py-2 bg-white/40 hover:bg-white/60 text-stone-700 rounded-xl transition-all duration-200 font-medium"
@@ -121,34 +158,12 @@
           </div>
           <div class="w-full bg-stone-200 rounded-full h-4 overflow-hidden shadow-inner">
             <div 
-              class="h-full bg-gradient-to-r from-amber-400 to-amber-600 rounded-full transition-all duration-500 shadow-sm"
-              :style="{ width: getFolderCompletionPercentage(selectedFolder.id) + '%' }"
+              class="h-full rounded-full transition-all duration-500 shadow-sm"
+              :style="{ 
+                width: getFolderCompletionPercentage(selectedFolder.id) + '%',
+                backgroundColor: getFolderColor(selectedFolder).bg
+              }"
             ></div>
-          </div>
-        </div>
-
-        <!-- Add Task Form -->
-        <div v-if="!showingArchive" class="mb-8">
-          <div class="flex items-center gap-3">
-            <input
-              v-model="newTaskTitle"
-              @keyup.enter="addTask"
-              :placeholder="`Add task to ${selectedFolder.name}...`"
-              class="flex-1 p-3 bg-white/60 backdrop-blur-sm border border-white/60 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none text-stone-900 placeholder-stone-600"
-            >
-            <input
-              v-model="newTaskDueDate"
-              type="date"
-              class="p-3 bg-white/60 backdrop-blur-sm border border-white/60 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none text-stone-700"
-              title="Due date (optional)"
-            >
-            <button
-              @click="addTask"
-              :disabled="!newTaskTitle?.trim()"
-              class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-stone-900 font-medium py-3 px-6 rounded-xl transition-all duration-200 disabled:cursor-not-allowed"
-            >
-              Add Task
-            </button>
           </div>
         </div>
 
@@ -173,7 +188,7 @@
               <div v-if="getActiveTasks(selectedFolder.id).length === 0" class="text-center py-12 text-stone-600">
                 <div class="text-6xl mb-4">✨</div>
                 <p class="text-xl font-medium">No active tasks</p>
-                <p class="text-stone-500 mt-2">Add your first task above!</p>
+                <p class="text-stone-500 mt-2">Click "Add Tasks" to get started!</p>
               </div>
             </div>
           </div>
@@ -225,6 +240,111 @@
         </div>
       </div>
     </div>
+
+    <!-- Add Task Popup -->
+    <div v-if="showAddTaskPopup" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-white/95 backdrop-blur-md rounded-2xl border border-white/60 shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden">
+        <!-- Popup Header -->
+        <div class="p-6 border-b border-stone-200">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl font-bold text-stone-900 flex items-center gap-2">
+              <span class="text-lg">{{ getFolderColor(selectedFolder).emoji }}</span>
+              Add Tasks to {{ selectedFolder.name }}
+            </h3>
+            <button
+              @click="closeAddTaskPopup"
+              class="text-stone-400 hover:text-stone-600 transition-colors"
+            >
+              <span class="text-xl">✕</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Popup Content -->
+        <div class="p-6 max-h-96 overflow-y-auto">
+          <!-- Task Input Form -->
+          <div class="space-y-4 mb-6">
+            <input
+              v-model="newTaskTitle"
+              @keyup.enter="addTaskToPopup"
+              placeholder="Enter task title..."
+              class="w-full p-3 bg-white/80 border border-stone-200 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none text-stone-900 placeholder-stone-500"
+              ref="taskInput"
+            >
+            <div class="flex gap-3">
+              <input
+                v-model="newTaskDueDate"
+                type="date"
+                class="flex-1 p-3 bg-white/80 border border-stone-200 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-stone-700"
+                title="Due date (optional)"
+              >
+              <button
+                @click="addTaskToPopup"
+                :disabled="!newTaskTitle?.trim()"
+                class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-stone-900 font-medium py-3 px-4 rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          <!-- Pending Tasks List -->
+          <div v-if="pendingTasks.length > 0" class="space-y-3">
+            <h4 class="text-sm font-medium text-stone-700 mb-3">Tasks to be added:</h4>
+            <div class="space-y-2">
+              <div
+                v-for="(task, index) in pendingTasks"
+                :key="index"
+                class="flex items-center justify-between p-3 bg-stone-50 rounded-lg border border-stone-200"
+              >
+                <div class="flex-1">
+                  <div class="font-medium text-stone-900">{{ task.title }}</div>
+                  <div v-if="task.dueDate" class="text-sm text-stone-600">
+                    Due: {{ formatDate(task.dueDate) }}
+                  </div>
+                </div>
+                <button
+                  @click="removePendingTask(index)"
+                  class="text-red-500 hover:text-red-700 transition-colors ml-2"
+                  title="Remove task"
+                >
+                  <span class="text-sm">✕</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="pendingTasks.length === 0" class="text-center py-8 text-stone-500">
+            <div class="text-4xl mb-2">📝</div>
+            <p>Start adding tasks above</p>
+          </div>
+        </div>
+
+        <!-- Popup Footer -->
+        <div class="p-6 border-t border-stone-200 bg-stone-50/50">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-stone-600">
+              {{ pendingTasks.length }} task{{ pendingTasks.length !== 1 ? 's' : '' }} ready
+            </span>
+            <div class="flex gap-3">
+              <button
+                @click="closeAddTaskPopup"
+                class="px-4 py-2 text-stone-600 hover:text-stone-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                @click="saveAllTasks"
+                :disabled="pendingTasks.length === 0"
+                class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-stone-900 font-medium py-2 px-4 rounded-lg transition-all duration-200 disabled:cursor-not-allowed"
+              >
+                Save All Tasks
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -245,12 +365,28 @@ const emit = defineEmits(['task-created', 'task-updated', 'task-deleted', 'folde
 // Reactive state
 const folders = ref([])
 const newFolderName = ref('')
+const newFolderColor = ref('blue')
 const showAddFolder = ref(false)
 const selectedFolderId = ref(null)
 const newTaskTitle = ref('')
 const newTaskDueDate = ref('')
 const showingArchive = ref(false)
 const folderInput = ref(null)
+
+const showAddTaskPopup = ref(false)
+const pendingTasks = ref([])
+const taskInput = ref(null)
+
+// Folder color options
+const folderColors = [
+  { name: 'Blue', value: 'blue', bg: '#3B82F6', emoji: '📘' },
+  { name: 'Green', value: 'green', bg: '#10B981', emoji: '📗' },
+  { name: 'Purple', value: 'purple', bg: '#8B5CF6', emoji: '📜' },
+  { name: 'Orange', value: 'orange', bg: '#F97316', emoji: '📙' },
+  { name: 'Red', value: 'red', bg: '#EF4444', emoji: '📕' },
+  { name: 'Yellow', value: 'yellow', bg: '#EAB308', emoji: '📒' },
+  { name: 'Teal', value: 'teal', bg: '#14B8A6', emoji: '📚' }
+]
 
 // Load folders from localStorage on mount
 const loadFolders = () => {
@@ -260,10 +396,81 @@ const loadFolders = () => {
   } else {
     // Create default folders
     folders.value = [
-      { id: 'default', name: 'Personal', createdAt: new Date().toISOString() }
+      { 
+        id: 'default', 
+        name: 'Personal', 
+        color: 'blue',
+        createdAt: new Date().toISOString() 
+      }
     ]
     saveFolders()
   }
+}
+const openAddTaskPopup = async () => {
+  showAddTaskPopup.value = true
+  pendingTasks.value = []
+  await nextTick()
+  taskInput.value?.focus()
+}
+
+const closeAddTaskPopup = () => {
+  showAddTaskPopup.value = false
+  pendingTasks.value = []
+  newTaskTitle.value = ''
+  newTaskDueDate.value = ''
+}
+
+const addTaskToPopup = () => {
+  if (!newTaskTitle.value?.trim()) return
+
+  const task = {
+    title: newTaskTitle.value.trim(),
+    dueDate: newTaskDueDate.value || null
+  }
+
+  pendingTasks.value.push(task)
+  
+  // Reset form but keep popup open
+  newTaskTitle.value = ''
+  newTaskDueDate.value = ''
+  
+  // Focus back to input
+  nextTick(() => {
+    taskInput.value?.focus()
+  })
+}
+
+const removePendingTask = (index) => {
+  pendingTasks.value.splice(index, 1)
+}
+
+const saveAllTasks = () => {
+  if (pendingTasks.value.length === 0 || !selectedFolderId.value) return
+
+  // Create and emit all tasks
+  pendingTasks.value.forEach(taskData => {
+    const newTask = {
+      title: taskData.title,
+      folderId: selectedFolderId.value,
+      dueDate: taskData.dueDate,
+      completed: false,
+      createdAt: new Date().toISOString()
+    }
+    
+    emit('task-created', newTask)
+  })
+
+  // Close popup and reset
+  closeAddTaskPopup()
+}
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric' 
+  })
 }
 
 // Save folders to localStorage
@@ -312,6 +519,11 @@ const getArchivedTasks = (folderId) => {
     .sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
 }
 
+// Get folder color information
+const getFolderColor = (folder) => {
+  return folderColors.find(color => color.value === (folder?.color || 'blue')) || folderColors[0]
+}
+
 // Methods
 const selectFolder = (folderId) => {
   selectedFolderId.value = folderId
@@ -327,6 +539,7 @@ const startAddFolder = async () => {
 const cancelAddFolder = () => {
   showAddFolder.value = false
   newFolderName.value = ''
+  newFolderColor.value = 'blue'
 }
 
 const addFolder = () => {
@@ -335,6 +548,7 @@ const addFolder = () => {
   const newFolder = {
     id: Date.now().toString(),
     name: newFolderName.value.trim(),
+    color: newFolderColor.value,
     createdAt: new Date().toISOString()
   }
 
@@ -347,6 +561,7 @@ const addFolder = () => {
   
   // Reset form
   newFolderName.value = ''
+  newFolderColor.value = 'blue'
   showAddFolder.value = false
 }
 
@@ -378,24 +593,6 @@ const deleteFolder = (folderId) => {
   if (selectedFolderId.value === folderId) {
     selectedFolderId.value = folders.value.length > 0 ? folders.value[0].id : null
   }
-}
-
-const addTask = () => {
-  if (!newTaskTitle.value?.trim() || !selectedFolderId.value) return
-
-  const newTask = {
-    title: newTaskTitle.value.trim(),
-    folderId: selectedFolderId.value,
-    dueDate: newTaskDueDate.value || null,
-    completed: false,
-    createdAt: new Date().toISOString()
-  }
-
-  emit('task-created', newTask)
-
-  // Reset form
-  newTaskTitle.value = ''
-  newTaskDueDate.value = ''
 }
 
 const updateTask = (updatedTask) => {
