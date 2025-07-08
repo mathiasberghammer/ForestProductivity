@@ -21,8 +21,19 @@
           ></div>
 
           <div class="relative z-10 p-8 text-center">
+            <!-- Today's Total Time - Top Right Corner -->
+            <div
+              v-if="todaySessions.length > 0"
+              class="absolute top-6 right-6 text-right"
+            >
+              <div class="text-sm text-stone-600 mb-1">Today's Total</div>
+              <div class="text-xl font-bold text-stone-900">
+                {{ formatDuration(todayTotalTime) }}
+              </div>
+            </div>
+
             <!-- Progress Ring -->
-            <div class="relative w-80 h-80 mx-auto mb-8">
+            <div class="relative w-80 h-80 mx-auto ">
               <svg
                 class="w-80 h-80 transform -rotate-90 drop-shadow-2xl"
                 viewBox="0 0 160 160"
@@ -97,7 +108,7 @@
                     v-if="!isRunning"
                     :src="getSelectedTreeType().image"
                     :alt="getSelectedTreeType().name"
-                    class="w-16 h-16 object-contain"
+                    class="w-28 h-28 object-contain"
                   />
                   <span v-else class="text-6xl">{{ currentTreeEmoji }}</span>
                 </div>
@@ -123,49 +134,6 @@
           </div>
         </div>
 
-        <!-- Add this debug button to your template, preferably in the header section -->
-<!-- Place this right after the main header, before the grid layout -->
-
-<!-- Debug Section (only show in development) -->
-<div v-if="showDebugControls" class="mb-8 text-center">
-  <div class="relative inline-block">
-    <!-- Glass morphism background -->
-    <div class="absolute inset-0 bg-red-100/50 backdrop-blur-md rounded-2xl border border-red-200/60 shadow-lg"></div>
-    
-    <div class="relative z-10 p-4">
-      <h4 class="text-sm font-bold text-red-700 mb-3">🐛 Debug Controls</h4>
-      <div class="flex items-center gap-3 justify-center">
-        <button
-          @click="debugAddTree"
-          class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm flex items-center gap-2"
-          title="Instantly add a tree for testing"
-        >
-          <span class="text-lg">🌳</span>
-          <span>Add Debug Tree</span>
-        </button>
-        
-        <button
-          @click="debugAddMultipleTrees"
-          class="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm flex items-center gap-2"
-          title="Add 5 trees at once"
-        >
-          <span class="text-lg">🌲</span>
-          <span>Add 5 Trees</span>
-        </button>
-        
-        <button
-          @click="debugCompleteSession"
-          class="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm flex items-center gap-2"
-          title="Simulate a completed focus session"
-        >
-          <span class="text-lg">⏱️</span>
-          <span>Complete Session</span>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
         <!-- Duration Settings Card -->
         <div v-if="!isRunning" class="relative mb-8">
           <!-- Glass morphism background -->
@@ -174,9 +142,49 @@
           ></div>
 
           <div class="relative z-10 p-8">
-            <h3 class="text-2xl font-bold text-stone-900 mb-8 text-center">
+            <h3 class="text-2xl font-bold text-stone-900 mb-6 text-center">
               Choose Your Focus Duration
             </h3>
+
+            <!-- Focus Topic Selection (Subtle) -->
+            <div class="mb-6">
+              <div class="relative">
+                <select
+                  v-model="selectedFolderId"
+                  @change="loadFolderTasks"
+                  class="w-full p-2.5 bg-white/30 backdrop-blur-sm border border-white/30 rounded-lg focus:ring-1 focus:ring-amber-400 focus:border-amber-400 outline-none text-stone-700 text-sm shadow-sm appearance-none cursor-pointer transition-all duration-200 hover:bg-white/40"
+                >
+                  <option value="" class="bg-white text-stone-700">
+                    Select focus topic (optional)
+                  </option>
+                  <option
+                    v-for="folder in availableFolders"
+                    :key="folder.id"
+                    :value="folder.id"
+                    class="bg-white text-stone-700"
+                  >
+                    {{ folder.name }} ({{ getActiveTasks(folder.id).length }}
+                    tasks)
+                  </option>
+                </select>
+                <!-- Custom dropdown arrow -->
+                <div
+                  class="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none"
+                >
+                  <svg
+                    class="w-3.5 h-3.5 text-stone-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clip-rule="evenodd"
+                    ></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
 
             <!-- Slider -->
             <div class="relative px-6 mb-8">
@@ -195,22 +203,18 @@
                 class="flex justify-between text-xs text-stone-600 mt-2 px-2"
               >
                 <span>1 min</span>
-                <!-- Change from "30 min" -->
                 <span>2 min</span>
-                <!-- Change from "1 hour" -->
                 <span>3 min</span>
-                <!-- Change from "2 hours" -->
                 <span>4 min</span>
-                <!-- Change from "3 hours" -->
                 <span>5 min</span>
-                <!-- Change from "4 hours" -->
               </div>
             </div>
+
             <!-- Start Focus Button -->
             <div class="text-center">
               <button
                 @click="startTimer"
-                class="group mb-6 relative overflow-hidden bg-amber-600 hover:bg-amber-700 text-stone-900 font-bold py-4 px-12 rounded-2xl transition-all duration-300 flex items-center gap-3 shadow-xl hover:shadow-2xl transform hover:scale-105 hover:-translate-y-1 mx-auto"
+                class="group relative overflow-hidden bg-amber-600 hover:bg-amber-700 text-stone-900 font-bold py-4 px-12 rounded-2xl transition-all duration-300 flex items-center gap-3 shadow-xl hover:shadow-2xl transform hover:scale-105 hover:-translate-y-1 mx-auto"
               >
                 <!-- Button glow effect -->
                 <div
@@ -222,69 +226,9 @@
                 </div>
               </button>
             </div>
-
-            <!-- Tree Selection -->
-            <div class="mb-8">
-              <h4 class="text-lg font-bold text-stone-900 mb-4 text-center">
-                Choose Your Tree to Grow
-              </h4>
-
-              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-                <div
-                  v-for="treeType in treeTypes"
-                  :key="treeType.id"
-                  @click="selectedTreeType = treeType.id"
-                  class="relative cursor-pointer transition-all duration-300 transform hover:scale-105"
-                  :class="{
-                    'ring-4 ring-amber-500 ring-opacity-60':
-                      selectedTreeType === treeType.id,
-                    'hover:ring-2 hover:ring-amber-300':
-                      selectedTreeType !== treeType.id,
-                  }"
-                >
-                  <div
-                    class="absolute inset-0 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/50 shadow-lg"
-                  ></div>
-
-                  <div class="relative z-10 p-4 text-center">
-                    <div class="mb-3">
-                      <img
-                        :src="treeType.image"
-                        :alt="treeType.name"
-                        class="w-12 h-12 mx-auto object-contain"
-                      />
-                    </div>
-                    <div class="text-sm font-medium text-stone-900 mb-1">
-                      {{ treeType.name }}
-                    </div>
-                    <div class="text-xs text-stone-600">
-                      {{ treeType.description }}
-                    </div>
-                  </div>
-
-                  <div
-                    v-if="selectedTreeType === treeType.id"
-                    class="absolute -top-2 -right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center shadow-lg"
-                  >
-                    <svg
-                      class="w-4 h-4 text-white"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clip-rule="evenodd"
-                      ></path>
-                    </svg>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        <!-- Focus Session Tasks Card -->
         <!-- Focus Session Card -->
         <div v-if="isRunning" class="relative mb-8">
           <!-- Glass morphism background -->
@@ -378,92 +322,9 @@
         </div>
       </div>
 
-      <!-- Sidebar: Today's Sessions and Task Selection -->
+      <!-- Sidebar: Tree Selection -->
       <div class="space-y-8">
-        <!-- Session History Card -->
-        <div class="relative">
-          <!-- Glass morphism background -->
-          <div
-            class="absolute inset-0 bg-white/30 backdrop-blur-md rounded-3xl border border-white/40 shadow-2xl"
-          ></div>
-
-          <div class="relative z-10 p-8">
-            <h3 class="text-2xl font-bold text-stone-900 mb-6">
-              Today's Growth
-            </h3>
-
-            <div
-              v-if="todaySessions.length === 0"
-              class="text-center py-8 text-stone-600"
-            >
-              <div class="text-5xl mb-3">🌱</div>
-              <p class="font-medium">No trees grown today</p>
-              <p class="text-sm mt-1">Start your first session!</p>
-            </div>
-
-            <div v-else class="space-y-4">
-              <div
-                v-for="session in todaySessions.slice(-5)"
-                :key="session.id"
-                class="group relative overflow-hidden bg-white/40 backdrop-blur-sm rounded-2xl p-4 border border-white/30 transition-all duration-300 hover:bg-white/60 hover:shadow-lg hover:scale-102"
-              >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-4">
-                    <div class="text-3xl group-hover:animate-pulse">
-                      {{ getSessionTreeEmoji(session.duration) }}
-                    </div>
-                    <div>
-                      <div class="font-bold text-stone-900">
-                        {{ formatDuration(session.duration) }}
-                      </div>
-                      <div class="text-sm text-stone-600">
-                        {{ formatTimeStamp(session.completedAt) }}
-                      </div>
-                      <div
-                        v-if="session.completed"
-                        class="text-xs text-green-600 font-medium"
-                      >
-                        Completed
-                      </div>
-
-                      <div
-                        v-if="session.tasksCompleted"
-                        class="text-xs text-blue-600 font-medium"
-                      >
-                        {{ session.tasksCompleted }} task{{
-                          session.tasksCompleted !== 1 ? "s" : ""
-                        }}
-                        completed
-                      </div>
-                    </div>
-                  </div>
-                  <div class="text-2xl text-amber-600">✓</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Today's Summary -->
-            <div
-              v-if="todaySessions.length > 0"
-              class="mt-6 pt-6 border-t border-white/50"
-            >
-              <div class="text-center">
-                <div class="text-sm text-stone-600 mb-2">Today's Total</div>
-                <div class="text-2xl font-bold text-stone-900">
-                  {{ formatDuration(todayTotalTime) }}
-                </div>
-                <div class="text-xs text-stone-500 mt-1">
-                  {{ todaySessions.length }} session{{
-                    todaySessions.length !== 1 ? "s" : ""
-                  }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Task Selection Card -->
-        <!-- Focus Topic Selection Card -->
+        <!-- Tree Selection Card -->
         <div v-if="!isRunning" class="relative mb-8">
           <!-- Glass morphism background -->
           <div
@@ -471,57 +332,59 @@
           ></div>
 
           <div class="relative z-10 p-8">
-            <h3 class="text-2xl font-bold text-stone-900 mb-6">
-              Select Focus Topic
+            <h3 class="text-2xl font-bold text-stone-900 mb-6 text-center">
+              Choose Your Tree to Grow
             </h3>
 
-            <!-- Folder Selection -->
-            <div class="mb-6">
-              <div class="relative">
-                <select
-                  v-model="selectedFolderId"
-                  @change="loadFolderTasks"
-                  class="w-full p-4 bg-white/60 backdrop-blur-sm border border-white/40 rounded-2xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none text-stone-900 font-medium shadow-lg appearance-none cursor-pointer transition-all duration-300 hover:bg-white/80 hover:shadow-xl"
-                >
-                  <option value="" class="bg-white text-stone-900">
-                    Select what you're working on
-                  </option>
-                  <option
-                    v-for="folder in availableFolders"
-                    :key="folder.id"
-                    :value="folder.id"
-                    class="bg-white text-stone-900"
-                  >
-                    {{ folder.name }} ({{ getActiveTasks(folder.id).length }}
-                    tasks)
-                  </option>
-                </select>
-                <!-- Custom dropdown arrow -->
+            <div class="max-h-[37rem] overflow-y-auto custom-scrollbar">
+              <div class="grid grid-cols-2 gap-4">
                 <div
-                  class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none"
+                  v-for="treeType in treeTypes"
+                  :key="treeType.id"
+                  @click="selectedTreeType = treeType.id"
+                  class="relative cursor-pointer transition-all duration-300 transform hover:scale-105 m-1"
+                  :class="{
+                    'ring-4 ring-amber-500 ring-opacity-60':
+                      selectedTreeType === treeType.id,
+                    'hover:ring-2 hover:ring-amber-300':
+                      selectedTreeType !== treeType.id,
+                  }"
                 >
-                  <svg
-                    class="w-5 h-5 text-stone-500"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clip-rule="evenodd"
-                    ></path>
-                  </svg>
-                </div>
-              </div>
-            </div>
+                  <div
+                    class="absolute inset-0 bg-white/40 backdrop-blur-sm rounded-2xl border border-white/50 shadow-lg"
+                  ></div>
 
-            <!-- Task List (Read-only) -->
-            <div v-if="selectedFolderId && folderTasks.length > 0">
-              <!-- Focus summary -->
-              <div class="mt-6 p-4">
-                <div class="text-center">
-                  <div class="text-amber-800 font-bold text-lg mb-1">
-                    Ready to focus on {{ getFolderName(selectedFolderId) }}
+                  <div class="relative z-10 p-4 text-center">
+                    <div class="mb-3">
+                      <img
+                        :src="treeType.image"
+                        :alt="treeType.name"
+                        class="w-12 h-12 mx-auto object-contain"
+                      />
+                    </div>
+                    <div class="text-sm font-medium text-stone-900 mb-1">
+                      {{ treeType.name }}
+                    </div>
+                    <div class="text-xs text-stone-600">
+                      {{ treeType.description }}
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="selectedTreeType === treeType.id"
+                    class="absolute -top-2 -right-2 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center shadow-lg"
+                  >
+                    <svg
+                      class="w-4 h-4 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clip-rule="evenodd"
+                      ></path>
+                    </svg>
                   </div>
                 </div>
               </div>
@@ -566,16 +429,20 @@ const folderTasks = ref([]);
 let timerId = null;
 
 // Add these to your reactive state section:
-const showDebugControls = ref(true) // Set to false in production
+const showDebugControls = ref(true); // Set to false in production
 
 // Add these debug methods to your script:
 
 const debugAddTree = () => {
-  console.log('🐛 Debug: Adding tree manually')
-  
+  console.log("🐛 Debug: Adding tree manually");
+
   // Use the current selected folder or default to first available
-  const folderId = selectedFolderId.value || (availableFolders.value.length > 0 ? availableFolders.value[0].id : 'debug')
-  
+  const folderId =
+    selectedFolderId.value ||
+    (availableFolders.value.length > 0
+      ? availableFolders.value[0].id
+      : "debug");
+
   emit("tree-grown", {
     type: selectedTreeType.value,
     treeType: selectedTreeType.value,
@@ -583,17 +450,21 @@ const debugAddTree = () => {
     source: "debug",
     folderId: folderId,
     grownAt: new Date().toISOString(),
-  })
-  
+  });
+
   // Show feedback
-  showDebugNotification("🌳 Debug tree added!")
-}
+  showDebugNotification("🌳 Debug tree added!");
+};
 
 const debugAddMultipleTrees = () => {
-  console.log('🐛 Debug: Adding 5 trees')
-  
-  const folderId = selectedFolderId.value || (availableFolders.value.length > 0 ? availableFolders.value[0].id : 'debug')
-  
+  console.log("🐛 Debug: Adding 5 trees");
+
+  const folderId =
+    selectedFolderId.value ||
+    (availableFolders.value.length > 0
+      ? availableFolders.value[0].id
+      : "debug");
+
   // Add 5 trees with slight delays to see them grow
   for (let i = 0; i < 5; i++) {
     setTimeout(() => {
@@ -604,22 +475,26 @@ const debugAddMultipleTrees = () => {
         source: "debug-bulk",
         folderId: folderId,
         grownAt: new Date().toISOString(),
-      })
-    }, i * 200) // 200ms delay between each tree
+      });
+    }, i * 200); // 200ms delay between each tree
   }
-  
-  showDebugNotification("🌲 Added 5 debug trees!")
-}
+
+  showDebugNotification("🌲 Added 5 debug trees!");
+};
 
 const debugCompleteSession = () => {
-  console.log('🐛 Debug: Simulating completed session')
-  
-  const folderId = selectedFolderId.value || (availableFolders.value.length > 0 ? availableFolders.value[0].id : 'debug')
-  
+  console.log("🐛 Debug: Simulating completed session");
+
+  const folderId =
+    selectedFolderId.value ||
+    (availableFolders.value.length > 0
+      ? availableFolders.value[0].id
+      : "debug");
+
   // Simulate a 5-minute completed session
-  const sessionDuration = 5 * 60 // 5 minutes
-  const treesToGrow = Math.floor(sessionDuration / 60) // 5 trees
-  
+  const sessionDuration = 5 * 60; // 5 minutes
+  const treesToGrow = Math.floor(sessionDuration / 60); // 5 trees
+
   // Grow all the trees
   for (let i = 0; i < treesToGrow; i++) {
     setTimeout(() => {
@@ -630,47 +505,51 @@ const debugCompleteSession = () => {
         source: "debug-session",
         folderId: folderId,
         grownAt: new Date().toISOString(),
-      })
-    }, i * 100)
+      });
+    }, i * 100);
   }
-  
+
   // Emit the focus time update
   setTimeout(() => {
-    emit("focus-time-updated", sessionDuration, folderId)
-    showDebugNotification(`⏱️ Simulated ${formatDuration(sessionDuration)} focus session with ${treesToGrow} trees!`)
-  }, treesToGrow * 100 + 500)
-}
+    emit("focus-time-updated", sessionDuration, folderId);
+    showDebugNotification(
+      `⏱️ Simulated ${formatDuration(
+        sessionDuration
+      )} focus session with ${treesToGrow} trees!`
+    );
+  }, treesToGrow * 100 + 500);
+};
 
 const showDebugNotification = (message) => {
   // Create a temporary debug notification
-  const notification = document.createElement("div")
+  const notification = document.createElement("div");
   notification.innerHTML = `
     <div class="fixed top-4 left-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce border-2 border-red-600">
       🐛 ${message}
     </div>
-  `
-  document.body.appendChild(notification)
+  `;
+  document.body.appendChild(notification);
 
   // Remove notification after 3 seconds
   setTimeout(() => {
     if (notification.parentNode) {
-      notification.parentNode.removeChild(notification)
+      notification.parentNode.removeChild(notification);
     }
-  }, 3000)
-}
+  }, 3000);
+};
 
 // Constants
 const circumference = 2 * Math.PI * 65; // radius = 65
 
-const selectedTreeType = ref("fern"); // Default tree type
+const selectedTreeType = ref("philodendron"); // Default tree type
 
 const treeTypes = [
-  {
-    id: "fern",
-    name: "Fern",
-    image: "/fern.png",
-    emoji: "🌿",
-    description: "Delicate and graceful",
+{
+    id: "philodendron",
+    name: "Philodendron",
+    image: "/philodendron.png",
+    emoji: "🍃",
+    description: "Lush and vibrant",
   },
   {
     id: "monstera",
@@ -687,18 +566,11 @@ const treeTypes = [
     description: "Exotic and striking",
   },
   {
-    id: "philodendron",
-    name: "Philodendron",
-    image: "/philodendron.png",
-    emoji: "🍃",
-    description: "Lush and vibrant",
-  },
-  {
-    id: "treee",
-    name: "Oak Tree",
-    image: "/treee.png",
-    emoji: "🌳",
-    description: "Strong and enduring",
+    id: "ayahuasca",
+    name: "Ayahuasca",
+    image: "/ayahuasca.png",
+    emoji: "🌱",
+    description: "Trippy and spiritual",
   },
   {
     id: "tree3",
@@ -735,13 +607,7 @@ const treeTypes = [
     emoji: "🌱",
     description: "Large and leafy",
   },
-  {
-    id: "ayahuasca",
-    name: "Ayahuasca",
-    image: "/ayahuasca.png",
-    emoji: "🌱",
-    description: "Trippy and spiritual",
-  },
+
   {
     id: "peperomia",
     name: "Peperomia",
@@ -757,11 +623,25 @@ const treeTypes = [
     description: "Colorful and vibrant",
   },
   {
+    id: "fern",
+    name: "Fern",
+    image: "/fern.png",
+    emoji: "🌿",
+    description: "Delicate and graceful",
+  },
+  {
     id: "mushroom",
     name: "Mushroom",
     image: "/mushroom.png",
     emoji: "🍄",
     description: "Unique and mysterious",
+  },
+  {
+    id: "treee",
+    name: "Oak Tree",
+    image: "/treee.png",
+    emoji: "🌳",
+    description: "Strong and enduring",
   },
 ];
 
@@ -1124,6 +1004,7 @@ onUnmounted(() => {
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(245, 158, 11, 0.3) transparent;
+  padding: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar {

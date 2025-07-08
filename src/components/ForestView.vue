@@ -251,9 +251,7 @@
   <div class="mb-8 sm:mb-10 lg:mb-12">
     <div class="relative">
       <!-- Glass morphism background -->
-      <div
-        class="absolute inset-0 bg-white/30 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/40 shadow-2xl"
-      ></div>
+
 
       <div class="relative z-10 p-6 sm:p-8">
         <div
@@ -275,7 +273,7 @@
 
         <!-- Daily Chart -->
         <div
-          class="bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/50"
+          class="bg-white/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/50"
         >
           <div class="grid grid-cols-7 gap-2 sm:gap-4 mb-4">
             <div
@@ -331,9 +329,6 @@
   <div class="mb-8 sm:mb-10 lg:mb-12">
     <div class="relative">
       <!-- Glass morphism background -->
-      <div
-        class="absolute inset-0 bg-white/30 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/40 shadow-2xl"
-      ></div>
 
       <div class="relative z-10 p-6 sm:p-8">
         <div
@@ -355,7 +350,7 @@
 
         <!-- Chart -->
         <div
-          class="bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/50"
+          class="bg-white/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/50"
         >
           <div class="grid grid-cols-7 gap-2 sm:gap-4 mb-4">
             <div
@@ -396,9 +391,6 @@
   <div class="mb-8 sm:mb-10 lg:mb-12">
     <div class="relative">
       <!-- Glass morphism background -->
-      <div
-        class="absolute inset-0 bg-white/30 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-white/40 shadow-2xl"
-      ></div>
 
       <div class="relative z-10 p-6 sm:p-8">
         <div
@@ -420,7 +412,7 @@
 
         <!-- Folder Stats -->
         <div
-          class="bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/50"
+          class="bg-white/30 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/50"
         >
           <!-- Empty State -->
           <div
