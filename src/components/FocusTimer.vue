@@ -664,7 +664,6 @@ const circumference = 2 * Math.PI * 65; // radius = 65
 
 const selectedTreeType = ref("fern"); // Default tree type
 
-// Add this tree types array
 const treeTypes = [
   {
     id: "fern",
@@ -681,11 +680,32 @@ const treeTypes = [
     description: "Bold and tropical",
   },
   {
+    id: "alocasia",
+    name: "Alocasia",
+    image: "/alocasia.png",
+    emoji: "🍃",
+    description: "Exotic and striking",
+  },
+  {
+    id: "philodendron",
+    name: "Philodendron",
+    image: "/philodendron.png",
+    emoji: "🍃",
+    description: "Lush and vibrant",
+  },
+  {
     id: "treee",
     name: "Oak Tree",
     image: "/treee.png",
     emoji: "🌳",
     description: "Strong and enduring",
+  },
+  {
+    id: "tree3",
+    name: "Overgrown Tree",
+    image: "/tree4.png",
+    emoji: "🌳",
+    description: "Overgrown and wild",
   },
   {
     id: "tree2",
@@ -695,11 +715,46 @@ const treeTypes = [
     description: "Tall and majestic",
   },
   {
+    id: "tree4",
+    name: "Tree of Life",
+    image: "/tree5.png",
+    emoji: "🌲",
+    description: "Life and growth",
+  },
+  {
     id: "pothos",
     name: "Pothos",
     image: "/pothos.png",
     emoji: "🌱",
     description: "Big and Beautiful",
+  },
+  {
+    id: "elefant",
+    name: "Elefant Ear",
+    image: "/elefant.png",
+    emoji: "🌱",
+    description: "Large and leafy",
+  },
+  {
+    id: "ayahuasca",
+    name: "Ayahuasca",
+    image: "/ayahuasca.png",
+    emoji: "🌱",
+    description: "Trippy and spiritual",
+  },
+  {
+    id: "peperomia",
+    name: "Peperomia",
+    image: "/peperomia.png",
+    emoji: "🌱",
+    description: "Small and charming",
+  },
+  {
+    id: "caladium",
+    name: "Caladium",
+    image: "/caladium.png",
+    emoji: "🌱",
+    description: "Colorful and vibrant",
   },
   {
     id: "mushroom",

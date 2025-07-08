@@ -9,125 +9,135 @@
 
       <div class="relative z-10 p-6 sm:p-8">
         <!-- Grid Header -->
-<!-- Updated Grid Header with Density Indicator -->
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <!-- Updated Grid Header with Density Indicator -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
   <h2 class="text-xl sm:text-2xl font-bold text-stone-900">
     Your Digital Forest
   </h2>
-  <div class="flex items-center gap-4">
-    <!-- Forest Density Indicator -->
-    <div class="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 border border-white/50">
-      <span class="text-lg">{{ getForestDensity().emoji }}</span>
-      <span class="text-sm font-medium" :class="getForestDensity().color">
-        {{ getForestDensity().label }}
-      </span>
-    </div>
+  <div class="flex items-center gap-4 flex-wrap">
+    <!-- Jungle Generation Selector -->
+    <div class="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 border border-white/50 cursor-pointer hover:bg-white/70 transition-all duration-200" 
+     @click="showJungleSelector = true">
+  <span class="text-lg">🌍</span>
+  <span class="text-sm font-medium text-stone-900">{{ getCurrentJungle()?.name || 'Current Jungle' }}</span>
+  <span v-if="getCurrentJungle()?.completedAt" class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">VIEWING</span>
+  <span class="text-xs text-stone-600">({{ totalTrees }}/{{ MAX_JUNGLE_CAPACITY }})</span>
+  <span class="text-xs">▼</span>
+</div>
+
     
-    <!-- Grid Size Indicator -->
-    <div class="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 border border-white/50">
-      <span class="text-lg">📐</span>
-      <span class="text-sm font-bold text-stone-900">{{ gridSize }}×{{ gridSize }}</span>
-      <span class="text-xs text-stone-600">grid</span>
-    </div>
     
-    <!-- Total trees counter -->
+    <!-- Total trees counter with completion progress -->
     <div class="flex items-center gap-2 bg-white/60 backdrop-blur-sm rounded-xl px-3 sm:px-4 py-2 border border-white/50">
       <span class="text-xl sm:text-2xl">🌳</span>
       <span class="text-base sm:text-lg font-bold text-stone-900">{{ totalTrees }}</span>
       <span class="text-sm text-stone-600">trees</span>
-    </div>
-  </div>
-</div>
-
-<!-- Updated Grid Container with Dynamic Sizing -->
-<div class="flex justify-center items-center" style="perspective: 1500px">
-  <div
-    class="relative grid transition-all duration-700 ease-in-out"
-    :style="{
-      gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
-      gridTemplateRows: `repeat(${gridSize}, minmax(0, 1fr))`,
-      transform: 'rotateX(60deg) rotateZ(45deg)',
-      transformStyle: 'preserve-3d',
-    }"
-  >
-    <!-- Isometric 3D Tiles with Dynamic Sizing -->
-    <div
-      v-for="(cell, index) in jungleGrid"
-      :key="index"
-      class="relative transition-all duration-700 ease-in-out"
-      :class="getGridCellSize(totalTrees)"
-      style="transform-style: preserve-3d"
-    >
-      <!-- Tile Container -->
-      <div class="relative w-full h-full">
-        <!-- Top surface with image background -->
-        <div
-          class="absolute inset-0 w-full h-full transition-all duration-700 ease-in-out"
-          style="
-            background-image: url('/bg.png');
-            background-size: cover;
-            background-position: center;
-            transform: translateZ(6px);
-          "
-        >
-          <!-- Optional texture overlay -->
-          <div
-            class="w-full h-full opacity-20"
-            style="
-              background-image: radial-gradient(
-                  circle at 25% 25%,
-                  rgba(85, 139, 47, 0.8) 1px,
-                  transparent 2px
-                ),
-                radial-gradient(
-                  circle at 75% 75%,
-                  rgba(107, 142, 35, 0.6) 1px,
-                  transparent 2px
-                );
-              background-size: 8px 8px, 12px 12px;
-            "
-          ></div>
-        </div>
+      <div v-if="isCurrentJungleFull" class="ml-2 px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full font-medium">
+        FULL
       </div>
     </div>
-
-    <!-- Trees positioned on top with Dynamic Sizing -->
-    <div
-      v-for="(cell, index) in jungleGrid.filter((cell) => cell.tree)"
-      :key="`tree-${index}`"
-      class="absolute flex items-center justify-center transition-all duration-700 ease-in-out"
-      :class="getGridCellSize(totalTrees)"
-      :style="{
-        gridColumn: (jungleGrid.indexOf(cell) % gridSize) + 1,
-        gridRow: Math.floor(jungleGrid.indexOf(cell) / gridSize) + 1,
-        transform: 'rotateZ(-45deg) rotateX(-60deg) translateZ(25px)',
-        zIndex: 1000 + index,
-      }"
-    >
-    <img
-  :src="getTreeImage(cell.tree)"
-  :alt="getTreeName(cell.tree)"
-  class="transition-all duration-700 ease-in-out"
-  :class="getTreeImageSize(totalTrees, cell.tree.treeType || cell.tree.type)"
-  :style="{
-    filter: getTreeFilter(cell.tree),
-  }"
-  :title="`${getTreeName(cell.tree)} - ${formatDuration(cell.tree.duration || 0)}`"
-/>
-    </div>
   </div>
 </div>
 
-<!-- Optional: Forest Growth Milestone Notifications -->
-<div v-if="shouldShowMilestone()" class="mt-6 text-center">
-  <div class="bg-gradient-to-r from-green-100 to-emerald-100 border border-green-200 rounded-xl p-4 mx-auto max-w-md">
-    <div class="text-2xl mb-2">🎉</div>
-    <div class="text-sm font-bold text-green-800">Forest Milestone Reached!</div>
-    <div class="text-xs text-green-700 mt-1">
-      Your forest expanded to {{ gridSize }}×{{ gridSize }} grid
-    </div>
-  </div>
-</div>
+
+        <!-- Updated Grid Container with Dynamic Sizing -->
+        <div
+          class="flex justify-center items-center"
+          style="perspective: 1500px"
+        >
+          <div
+            class="relative grid transition-all duration-700 ease-in-out"
+            :style="{
+              gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
+              gridTemplateRows: `repeat(${gridSize}, minmax(0, 1fr))`,
+              transform: 'rotateX(60deg) rotateZ(45deg)',
+              transformStyle: 'preserve-3d',
+            }"
+          >
+            <!-- Isometric 3D Tiles with Dynamic Sizing -->
+            <div
+              v-for="(cell, index) in jungleGrid"
+              :key="index"
+              class="relative transition-all duration-700 ease-in-out"
+              :class="getGridCellSize(displayedTrees.length)"
+              style="transform-style: preserve-3d"
+            >
+              <!-- Tile Container -->
+              <div class="relative w-full h-full">
+                <!-- Top surface with image background -->
+                <div
+                  class="absolute inset-0 w-full h-full transition-all duration-700 ease-in-out"
+                  style="
+                    background-image: url('/bg.png');
+                    background-size: cover;
+                    background-position: center;
+                    transform: translateZ(6px);
+                  "
+                >
+                  <!-- Optional texture overlay -->
+                  <div
+                    class="w-full h-full opacity-20"
+                    style="
+                      background-image: radial-gradient(
+                          circle at 25% 25%,
+                          rgba(85, 139, 47, 0.8) 1px,
+                          transparent 2px
+                        ),
+                        radial-gradient(
+                          circle at 75% 75%,
+                          rgba(107, 142, 35, 0.6) 1px,
+                          transparent 2px
+                        );
+                      background-size: 8px 8px, 12px 12px;
+                    "
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Trees positioned on top with Dynamic Sizing -->
+            <div
+              v-for="(cell, index) in jungleGrid.filter((cell) => cell.tree)"
+              :key="`tree-${index}`"
+              class="absolute flex items-center justify-center transition-all duration-700 ease-in-out"
+              :class="getGridCellSize(totalTrees)"
+              :style="{
+                gridColumn: (jungleGrid.indexOf(cell) % gridSize) + 1,
+                gridRow: Math.floor(jungleGrid.indexOf(cell) / gridSize) + 1,
+                transform: 'rotateZ(-45deg) rotateX(-60deg) translateZ(25px)',
+                zIndex: 1000 + index,
+              }"
+            >
+              <img
+                :src="getTreeImage(cell.tree)"
+                :alt="getTreeName(cell.tree)"
+                class="transition-all duration-700 ease-in-out"
+                :class="getTreeImageSize(displayedTrees.length, cell.tree.treeType || cell.tree.type)"
+                :style="{
+                  filter: getTreeFilter(cell.tree),
+                }"
+                :title="`${getTreeName(cell.tree)} - ${formatDuration(
+                  cell.tree.duration || 0
+                )}`"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Optional: Forest Growth Milestone Notifications -->
+        <div v-if="shouldShowMilestone()" class="mt-6 text-center">
+          <div
+            class="bg-gradient-to-r from-green-100 to-emerald-100 border border-green-200 rounded-xl p-4 mx-auto max-w-md"
+          >
+            <div class="text-2xl mb-2">🎉</div>
+            <div class="text-sm font-bold text-green-800">
+              Forest Milestone Reached!
+            </div>
+            <div class="text-xs text-green-700 mt-1">
+              Your forest expanded to {{ gridSize }}×{{ gridSize }} grid
+            </div>
+          </div>
+        </div>
 
         <!-- Proper Isometric 3D Game Board - Corner View, No Gaps 
         <div
@@ -221,7 +231,7 @@
         </div>-->
 
         <!-- Empty State -->
-        <div v-if="trees.length === 0" class="text-center py-8 mt-8">
+        <div v-if="displayedTrees.length === 0" class="text-center py-8 mt-8">
           <div class="text-6xl mb-4">🌱</div>
           <h3 class="text-2xl font-bold text-stone-900 mb-3">
             Your forest is waiting to grow!
@@ -991,6 +1001,70 @@
     </div>
   </div>
 
+
+
+<!-- Jungle Collection Modal -->
+<div v-if="showJungleSelector" @click="showJungleSelector = false" 
+     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div @click.stop class="relative max-w-2xl w-full max-h-[80vh] overflow-hidden">
+    <div class="absolute inset-0 bg-white/30 backdrop-blur-md rounded-2xl border border-white/40 shadow-2xl"></div>
+    
+    <div class="relative z-10 p-6">
+      <div class="text-center mb-6">
+        <div class="text-4xl mb-4">🌍</div>
+        <h3 class="text-xl font-bold text-stone-900">Your Jungle Collection</h3>
+        <p class="text-stone-600 mt-2 text-sm">{{ jungleGenerations.length }} jungle{{ jungleGenerations.length !== 1 ? 's' : '' }} created</p>
+      </div>
+
+      <div class="max-h-96 overflow-y-auto space-y-3 mb-6">
+        <div v-for="jungle in jungleGenerations.slice().reverse()" :key="jungle.id"
+             @click="selectJungle(jungle.id)"
+             class="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-white/50 transition-all duration-200 hover:bg-white/70 cursor-pointer"
+             :class="{ 'ring-2 ring-amber-500': currentJungleId === jungle.id }">
+          
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <div class="text-2xl">{{ jungle.completedAt ? '🌳' : '🌱' }}</div>
+              <div>
+                <h4 class="font-bold text-stone-900 text-sm">{{ jungle.name }}</h4>
+                <div class="text-xs text-stone-600">
+  {{ jungle.completedAt ? 'Completed' : 'Active' }} • {{ getJungleTreeCount(jungle) }}/{{ jungle.maxCapacity }} trees
+</div>
+              </div>
+            </div>
+            <div v-if="currentJungleId === jungle.id" class="text-amber-500 text-lg">✓</div>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-2 text-xs text-center mt-3">
+            <div>
+              <div class="font-bold text-stone-900">{{ getJungleDuration(jungle) }}</div>
+              <div class="text-stone-600">Duration</div>
+            </div>
+            <div>
+  <div class="font-bold text-stone-900">{{ getJungleTreeCount(jungle) }}</div>
+  <div class="text-stone-600">Trees</div>
+</div>
+            <div>
+              <div class="font-bold text-stone-900">{{ getJungleCompletionPercentage(jungle) }}%</div>
+              <div class="text-stone-600">Complete</div>
+            </div>
+          </div>
+          
+          <div class="mt-2 text-xs text-stone-500">
+            Started: {{ formatDate(jungle.startedAt) }}
+            <span v-if="jungle.completedAt"> • Completed: {{ formatDate(jungle.completedAt) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <button @click="showJungleSelector = false"
+              class="w-full bg-amber-500 hover:bg-amber-600 text-stone-900 font-bold py-3 px-6 rounded-xl transition-all duration-200">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
   <!-- Tree Detail Modal -->
   <div
     v-if="selectedTree"
@@ -1068,7 +1142,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
+
 
 const props = defineProps({
   trees: {
@@ -1091,17 +1166,35 @@ const selectedDayData = ref(null);
 const gridSize = ref(4);
 const selectedProjectHistory = ref(null);
 
+const MAX_JUNGLE_CAPACITY = 289; // 17x17 grid
+const currentJungleId = ref(1);
+const showJungleSelector = ref(false);
+const jungleGenerations = ref([]);
+
 const showVarietiesModal = ref(false); // Add this line
 
+const emit = defineEmits(['jungle-completed', 'jungle-changed']);
 // Tree type definitions (same as timer)
 const treeTypes = [
   { id: "fern", name: "Fern", image: "/fern.png", emoji: "🌿" },
   { id: "monstera", name: "Monstera", image: "/monstera.png", emoji: "🍃" },
+  { id: "alocasia", name: "Alocasia", image: "/alocasia.png", emoji: "🌱" },
+  { id: "philodendron", name: "Philodendron", image: "/philodendron.png", emoji: "🌱" },
   { id: "treee", name: "Oak Tree", image: "/treee.png", emoji: "🌳" },
+  { id: "tree3", name: "Overgrown Tree", image: "/tree4.png", emoji: "🌳" },
   { id: "tree2", name: "Jungle Tree", image: "/tree2.png", emoji: "🌲" },
+  { id: "tree4", name: "Tree of Life", image: "/tree5.png", emoji: "🌲" },
   { id: "pothos", name: "Pothos", image: "/pothos.png", emoji: "🌱" },
+  { id: "elefant", name: "Elefant Ear", image: "/elefant.png", emoji: "🌱" },
+  { id: "ayahuasca", name: "Ayahuasca", image: "/ayahuasca.png", emoji: "🌱" },
+  { id: "peperomia", name: "Peperomia", image: "/peperomia.png", emoji: "🌱" },
+  { id: "caladium", name: "Caladium", image: "/caladium.png", emoji: "🌱" },
   { id: "mushroom", name: "Mushroom", image: "/mushroom.png", emoji: "🍄" },
 ];
+
+onMounted(() => {
+  initializeJungleSystem();
+});
 
 const getTreeImage = (tree) => {
   // Check multiple possible properties for tree type
@@ -1139,6 +1232,199 @@ const getTreeVarietyCount = () => {
 const showMonthlyHistory = (folderId) => {
   selectedProjectHistory.value = folderId;
 };
+
+const isCurrentJungleFull = computed(() => {
+  return props.trees.length >= MAX_JUNGLE_CAPACITY;
+});
+
+// Add these new methods:
+const initializeJungleSystem = () => {
+  const savedGenerations = localStorage.getItem('jungleGenerations');
+  if (savedGenerations) {
+    jungleGenerations.value = JSON.parse(savedGenerations);
+  }
+  
+  if (jungleGenerations.value.length === 0) {
+    createNewJungle();
+  }
+  
+  const activeJungle = jungleGenerations.value.find(jungle => !jungle.completedAt);
+  if (activeJungle) {
+    currentJungleId.value = activeJungle.id;
+  }
+};
+
+const createNewJungle = () => {
+  const newJungle = {
+    id: Date.now(),
+    name: `Jungle ${jungleGenerations.value.length + 1}`,
+    startedAt: new Date().toISOString(),
+    completedAt: null,
+    trees: [],
+    totalFocusTime: 0,
+    maxCapacity: MAX_JUNGLE_CAPACITY,
+    stats: {
+      sessionsCompleted: 0,
+      averageSessionTime: 0,
+      treesGrown: 0,
+      daysActive: 0
+    }
+  };
+  
+  jungleGenerations.value.push(newJungle);
+  currentJungleId.value = newJungle.id;
+  
+  return newJungle; // Return the jungle but don't save here (parent function saves)
+};
+
+const completeCurrentJungle = () => {
+  console.log('Auto-completing jungle and creating new one');
+  const currentJungle = getCurrentJungle();
+  
+  if (!currentJungle || currentJungle.completedAt) {
+    return;
+  }
+  
+  // Mark current jungle as completed
+  currentJungle.completedAt = new Date().toISOString();
+  currentJungle.trees = [...props.trees];
+  
+  const duration = new Date(currentJungle.completedAt) - new Date(currentJungle.startedAt);
+  const totalDays = Math.ceil(duration / (1000 * 60 * 60 * 24));
+  
+  currentJungle.stats = {
+    ...currentJungle.stats,
+    treesGrown: props.trees.length,
+    totalDays: totalDays,
+    completionPercentage: 100
+  };
+  
+  // Automatically create a new jungle
+  const newJungle = createNewJungle();
+  
+  // Save everything
+  saveJungleGenerations();
+  
+  // Show a subtle notification instead of a modal
+  showJungleCompletionNotification(currentJungle, newJungle);
+  
+  // Emit event to parent to clear trees and start fresh
+  emit('jungle-completed', {
+    completedJungle: currentJungle,
+    newJungle: newJungle
+  });
+};
+
+const showJungleCompletionNotification = (completedJungle, newJungle) => {
+  // Create a subtle toast notification
+  const notification = document.createElement('div');
+  notification.innerHTML = `
+    <div class="fixed top-4 right-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-4 rounded-xl shadow-2xl z-50 max-w-sm border border-green-400">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">🌟</span>
+        <div>
+          <div class="font-bold text-sm">Jungle Completed!</div>
+          <div class="text-xs opacity-90 mt-1">${completedJungle.name} → ${newJungle.name}</div>
+          <div class="text-xs opacity-75 mt-1">${completedJungle.trees.length} trees preserved</div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Animate in
+  const notificationEl = notification.firstElementChild;
+  notificationEl.style.transform = 'translateX(100%)';
+  notificationEl.style.transition = 'transform 0.3s ease-out';
+  
+  setTimeout(() => {
+    notificationEl.style.transform = 'translateX(0)';
+  }, 100);
+  
+  // Remove after 5 seconds
+  setTimeout(() => {
+    notificationEl.style.transform = 'translateX(100%)';
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 300);
+  }, 5000);
+};
+
+const getCurrentJungle = () => {
+  return jungleGenerations.value.find(jungle => jungle.id === currentJungleId.value);
+};
+
+const formatJungleDuration = () => {
+  const jungle = getCurrentJungle();
+  if (!jungle) return '';
+  
+  const start = new Date(jungle.startedAt);
+  const end = jungle.completedAt ? new Date(jungle.completedAt) : new Date();
+  const duration = end - start;
+  
+  const days = Math.floor(duration / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((duration % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  
+  if (days > 0) {
+    return `${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}`;
+  } else {
+    return `${hours} hour${hours !== 1 ? 's' : ''}`;
+  }
+};
+
+const getJungleDuration = (jungle) => {
+  const start = new Date(jungle.startedAt);
+  const end = jungle.completedAt ? new Date(jungle.completedAt) : new Date();
+  const duration = end - start;
+  
+  const days = Math.floor(duration / (1000 * 60 * 60 * 24));
+  return days > 0 ? `${days}d` : '<1d';
+};
+
+const getJungleCompletionPercentage = (jungle) => {
+  let treeCount;
+  
+  // If it's the current active jungle, use live tree count from props
+  if (jungle.id === currentJungleId.value && !jungle.completedAt) {
+    treeCount = props.trees.length;
+  } else {
+    // If it's a completed jungle, use stored tree count
+    treeCount = jungle.trees?.length || 0;
+  }
+  
+  return Math.round((treeCount / jungle.maxCapacity) * 100);
+};
+
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+};
+
+const selectJungle = (jungleId) => {
+  currentJungleId.value = jungleId;
+  showJungleSelector.value = false;
+  
+  const selectedJungle = jungleGenerations.value.find(j => j.id === jungleId);
+  console.log('Selected jungle:', selectedJungle);
+  
+  // Emit event to parent to switch jungle view
+  emit('jungle-changed', {
+    jungleId: jungleId,
+    jungle: selectedJungle
+  });
+};
+
+
+const saveJungleGenerations = () => {
+  localStorage.setItem('jungleGenerations', JSON.stringify(jungleGenerations.value));
+};
+
 
 const getMonthlyHistory = (folderId) => {
   const now = new Date();
@@ -1222,10 +1508,8 @@ const getMonthlyHistory = (folderId) => {
   return history.filter((month) => month.totalSeconds > 0);
 };
 
-
-
 // Computed properties
-const totalTrees = computed(() => props.trees.length);
+const totalTrees = computed(() => displayedTrees.value.length);
 
 const getTreeFilter = (tree) => {
   const duration = tree.duration || 0;
@@ -1278,47 +1562,53 @@ const formatTotalFocusTime = computed(() => {
 // Add these functions to your script setup section in ForestView.vue
 
 const getGridCellSize = (treeCount) => {
-  // Start with large trees, shrink as forest grows
-  if (treeCount <= 16) return 'w-20 h-20 sm:w-24 sm:h-24'; // 4x4 grid or less - large trees
-  if (treeCount <= 36) return 'w-18 h-18 sm:w-20 sm:h-20'; // 6x6 grid or less - medium-large trees
-  if (treeCount <= 64) return 'w-16 h-16 sm:w-18 sm:h-18'; // 8x8 grid or less - medium trees
-  if (treeCount <= 81) return 'w-14 h-14 sm:w-16 sm:h-16'; // 9x9 grid - small trees
-  if (treeCount <= 121) return 'w-12 h-12 sm:w-14 sm:h-14'; // 11x11 grid - smaller trees
-  if (treeCount <= 169) return 'w-10 h-10 sm:w-12 sm:h-12'; // 13x13 grid - tiny trees
-  return 'w-8 h-8 sm:w-10 sm:h-10'; // 15x15+ grid - very tiny trees
+  // Use displayedTrees.value.length instead of totalTrees
+  const actualTreeCount = displayedTrees.value.length;
+  
+  if (actualTreeCount <= 16) return 'w-20 h-20 sm:w-24 sm:h-24';
+  if (actualTreeCount <= 36) return 'w-18 h-18 sm:w-20 sm:h-20';
+  if (actualTreeCount <= 64) return 'w-16 h-16 sm:w-18 sm:h-18';
+  if (actualTreeCount <= 81) return 'w-14 h-14 sm:w-16 sm:h-16';
+  if (actualTreeCount <= 121) return 'w-12 h-12 sm:w-14 sm:h-14';
+  if (actualTreeCount <= 169) return 'w-10 h-10 sm:w-12 sm:h-12';
+  return 'w-8 h-8 sm:w-10 sm:h-10';
 };
 
 const getTreeImageSize = (treeCount, treeType) => {
-  const isSmallTree = ['pothos', 'monstera', 'mushroom', 'fern'].includes(treeType);
-  
+  const isSmallTree = ["pothos", "monstera", "mushroom", "fern", "alocasia", "philodendron", "elefant", "caladium"].includes(
+    treeType
+  );
+  const actualTreeCount = displayedTrees.value.length; // Use displayedTrees
+
+
   // For forests up to 81 trees, use your original sizing
   if (treeCount <= 81) {
-    return isSmallTree 
-      ? 'mb-8 w-14 h-14 sm:w-8 sm:h-8 lg:w-14 lg:h-14'
-      : 'mb-24 w-24 h-24 sm:w-14 sm:h-14 lg:w-28 lg:h-28';
+    return isSmallTree
+      ? "mb-8 w-14 h-14 sm:w-8 sm:h-8 lg:w-14 lg:h-14"
+      : "mb-24 w-24 h-24 sm:w-14 sm:h-14 lg:w-28 lg:h-28";
   }
-  
+
   // Only start scaling down after 81 trees
   if (treeCount <= 121) {
-    return isSmallTree 
-      ? 'mb-6 w-10 h-10 sm:w-6 sm:h-6 lg:w-10 lg:h-10'
-      : 'mb-20 w-18 h-18 sm:w-10 sm:h-10 lg:w-32 lg:h-28';
+    return isSmallTree
+      ? "mb-6 w-10 h-10 sm:w-6 sm:h-6 lg:w-10 lg:h-10"
+      : "mb-20 w-18 h-18 sm:w-10 sm:h-10 lg:w-32 lg:h-28";
   }
   if (treeCount <= 169) {
-    return isSmallTree 
-      ? 'mb-4 w-8 h-8 sm:w-4 sm:h-4 lg:w-8 lg:h-8'
-      : 'mb-16 w-12 h-12 sm:w-8 sm:h-8 lg:w-20 lg:h-20';
+    return isSmallTree
+      ? "mb-4 w-8 h-8 sm:w-4 sm:h-4 lg:w-8 lg:h-8"
+      : "mb-16 w-12 h-12 sm:w-8 sm:h-8 lg:w-20 lg:h-20";
   }
-  
+
   // Very dense forests
-  return isSmallTree 
-    ? 'mb-2 w-6 h-6 sm:w-3 sm:h-3 lg:w-6 lg:h-6'
-    : 'mb-12 w-8 h-8 sm:w-6 sm:h-6 lg:w-16 lg:h-16';
+  return isSmallTree
+    ? "mb-2 w-6 h-6 sm:w-3 sm:h-3 lg:w-6 lg:h-6"
+    : "mb-12 w-8 h-8 sm:w-6 sm:h-6 lg:w-16 lg:h-16";
 };
 
 // Update your existing calculateGridSize function to this:
 const calculateGridSize = () => {
-  const treeCount = props.trees.length;
+  const treeCount = displayedTrees.value.length; // Use displayedTrees instead of props.trees.length
   if (treeCount === 0) return 4;
 
   // Progressive grid sizes
@@ -1329,26 +1619,23 @@ const calculateGridSize = () => {
   if (treeCount <= 121) return 11; // 11x11 = 121 trees max
   if (treeCount <= 169) return 13; // 13x13 = 169 trees max
   if (treeCount <= 225) return 15; // 15x15 = 225 trees max
+  if (treeCount <= 289) return 17; // 17x17 = 289 trees max
   
-  return 17; // 17x17 = 289 trees max (should be plenty!)
+  return 17; // Cap at 17x17
 };
 
-// Add these new functions:
-const getForestDensity = () => {
-  const treeCount = props.trees.length;
-  if (treeCount <= 16) return { label: 'Sparse Grove', color: 'text-green-600', emoji: '🌱' };
-  if (treeCount <= 36) return { label: 'Growing Forest', color: 'text-green-700', emoji: '🌿' };
-  if (treeCount <= 64) return { label: 'Dense Woods', color: 'text-green-800', emoji: '🌳' };
-  if (treeCount <= 81) return { label: 'Thick Forest', color: 'text-emerald-800', emoji: '🌲' };
-  if (treeCount <= 121) return { label: 'Ancient Woods', color: 'text-stone-700', emoji: '🏛️' };
-  if (treeCount <= 169) return { label: 'Mystical Grove', color: 'text-purple-700', emoji: '✨' };
-  return { label: 'Legendary Forest', color: 'text-amber-700', emoji: '👑' };
-};
 
 const shouldShowMilestone = () => {
   const treeCount = props.trees.length;
   // Show milestone when hitting exact grid expansion points
-  return treeCount === 16 || treeCount === 36 || treeCount === 64 || treeCount === 81 || treeCount === 121 || treeCount === 169;
+  return (
+    treeCount === 16 ||
+    treeCount === 36 ||
+    treeCount === 64 ||
+    treeCount === 81 ||
+    treeCount === 121 ||
+    treeCount === 169
+  );
 };
 
 // Create jungle grid with trees in random positions
@@ -1362,7 +1649,7 @@ const jungleGrid = computed(() => {
     .map(() => ({ tree: null }));
 
   // Shuffle trees into random positions
-  const shuffledTrees = [...props.trees].sort(() => Math.random() - 0.5);
+  const shuffledTrees = [...displayedTrees.value].sort(() => Math.random() - 0.5);
 
   shuffledTrees.forEach((tree, index) => {
     if (index < totalCells) {
@@ -1951,6 +2238,19 @@ const formatFullDate = (dateString) => {
   });
 };
 
+const displayedTrees = computed(() => {
+  const currentJungle = getCurrentJungle();
+  if (!currentJungle) return [];
+  
+  // If viewing a completed jungle, show its stored trees
+  if (currentJungle.completedAt) {
+    return currentJungle.trees || [];
+  }
+  
+  // If viewing active jungle, show live trees from props
+  return props.trees;
+});
+
 const selectTree = (tree) => {
   selectedTree.value = tree;
 };
@@ -1962,6 +2262,28 @@ const selectWeek = (week) => {
 const selectDay = (day) => {
   selectedDayData.value = day;
 };
+
+const getJungleTreeCount = (jungle) => {
+  // If it's the current active jungle, show live count
+  if (jungle.id === currentJungleId.value && !jungle.completedAt) {
+    return props.trees.length;
+  }
+  // If it's a completed jungle, show stored count
+  return jungle.trees?.length || 0;
+};
+
+// Add this watcher:
+watch(totalTrees, (newCount, oldCount) => {
+  console.log(`Trees: ${oldCount} → ${newCount}`);
+  
+  if (newCount >= MAX_JUNGLE_CAPACITY) {
+    const currentJungle = getCurrentJungle();
+    if (currentJungle && !currentJungle.completedAt) {
+      console.log(`🌟 Jungle "${currentJungle.name}" completed! Auto-creating new jungle...`);
+      completeCurrentJungle();
+    }
+  }
+});
 </script>
 
 <style scoped>

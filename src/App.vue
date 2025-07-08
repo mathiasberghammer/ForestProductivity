@@ -4,29 +4,40 @@
       <!-- Sidebar -->
       <nav class="w-80 bg-stone-800 border-r border-stone-700 p-6 flex flex-col">
         <!-- Logo Section -->
-        <div class="flex items-center gap-3 mb-10 pb-6 border-b border-stone-600">
-          <div class="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center text-stone-800 shadow-lg">
-            <svg viewBox="0 0 24 24" class="w-6 h-6">
-              <path fill="currentColor" d="M12 2L8 8h8l-4-6z"/>
-              <path fill="currentColor" d="M10 8L6 14h12l-4-6H10z" opacity="0.8"/>
-              <rect x="11" y="14" width="2" height="8" fill="currentColor" opacity="0.6"/>
-            </svg>
-          </div>
-          <div class="flex-1">
-            <h1 class="text-2xl font-bold text-amber-100 leading-none">FocusForest</h1>
-            <span class="text-sm text-amber-300 font-medium block mt-0.5">Productivity Studio</span>
-          </div>
-          <!-- Tiny Reset Button -->
-          <button
-            @click="confirmResetProfile"
-            class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-900 hover:bg-red-800 text-red-300 hover:text-red-200 transition-all duration-200 opacity-50 hover:opacity-100"
-            title="Reset all data"
-          >
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-            </svg>
-          </button>
-        </div>
+        <div class="flex items-center gap-3 mb-10 pb-6 border-b border-stone-600 relative">
+  <!-- Hanging Pothos -->
+  <img 
+    src="/pothos.png" 
+    alt="Hanging Pothos" 
+    class="absolute -top-2 -left-2 w-16 h-24 object-cover z-10 pointer-events-none opacity-90"
+    style="transform: scaleX(-1);"
+  />
+  
+  <!-- Original Logo -->
+  <div class="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center text-stone-800 shadow-lg">
+    <svg viewBox="0 0 24 24" class="w-6 h-6">
+      <path fill="currentColor" d="M12 2L8 8h8l-4-6z"/>
+      <path fill="currentColor" d="M10 8L6 14h12l-4-6H10z" opacity="0.8"/>
+      <rect x="11" y="14" width="2" height="8" fill="currentColor" opacity="0.6"/>
+    </svg>
+  </div>
+  
+  <div class="flex-1">
+    <h1 class="text-2xl font-bold text-amber-100 leading-none">FocusForest</h1>
+    <span class="text-sm text-amber-300 font-medium block mt-0.5">Productivity Studio</span>
+  </div>
+  
+  <!-- Tiny Reset Button -->
+  <button
+    @click="confirmResetProfile"
+    class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-900 hover:bg-red-800 text-red-300 hover:text-red-200 transition-all duration-200 opacity-50 hover:opacity-100"
+    title="Reset all data"
+  >
+    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+    </svg>
+  </button>
+</div>
 
         <!-- Navigation -->
         <div class="flex-1 flex flex-col gap-2 mb-8">
@@ -134,6 +145,8 @@
   @focus-state-changed="handleFocusUpdated"
   @folder-created="handleFolderCreated"
   @folder-deleted="handleFolderDeleted"
+  @jungle-completed="handleJungleCompleted"
+  @jungle-changed="handleJungleChanged"
 />
         </div>
       </main>
@@ -209,7 +222,29 @@ const totalFocusTime = computed(() => {
   }, 0)
 })
 
-const totalTrees = computed(() => trees.value.length)
+const totalTrees = computed(() => {
+  // Get current active jungle trees
+  const currentTrees = trees.value.length;
+  
+  // Get completed jungle trees from localStorage
+  let completedJungleTrees = 0;
+  try {
+    const savedGenerations = localStorage.getItem('jungleGenerations');
+    if (savedGenerations) {
+      const generations = JSON.parse(savedGenerations);
+      completedJungleTrees = generations
+        .filter(jungle => jungle.completedAt) // Only completed jungles
+        .reduce((total, jungle) => total + (jungle.trees?.length || 0), 0);
+    }
+  } catch (error) {
+    console.error('Error loading jungle generations for tree count:', error);
+  }
+  
+  const totalCount = currentTrees + completedJungleTrees;
+  console.log(`Total trees: ${currentTrees} (current) + ${completedJungleTrees} (completed) = ${totalCount}`);
+  
+  return totalCount;
+});
 const totalFocusHours = computed(() => Math.floor(totalFocusTime.value / 3600))
 const completedTasksCount = computed(() => {
   return tasks.value.filter(task => task.completed).length
@@ -269,6 +304,15 @@ const handleFocusTimeUpdated = (focusTime, folderId = null) => {
   
   saveData()
 }
+
+const handleJungleCompleted = (data) => {
+
+  trees.value = [];
+  
+  // Save the cleared state
+  saveData();
+  
+};
 
 // Navigation handler
 const handleNavClick = (event, itemId) => {
@@ -432,6 +476,21 @@ This action cannot be undone. Are you absolutely sure?`
   }
 }
 
+const handleJungleChanged = (data) => {
+  console.log('Jungle view changed:', data);
+  
+  if (data.jungle.completedAt) {
+    // Viewing a completed jungle - load its trees temporarily for display
+    console.log('Viewing completed jungle:', data.jungle.name);
+    console.log('Trees in this jungle:', data.jungle.trees?.length || 0);
+    // ForestView will handle displaying the stored trees
+  } else {
+    // Viewing active jungle - should show current trees
+    console.log('Viewing active jungle:', data.jungle.name);
+    console.log('Current active trees:', trees.value.length);
+  }
+};
+
 const resetProfile = async () => {
   try {
     // Clear all reactive data
@@ -453,7 +512,10 @@ const resetProfile = async () => {
       localStorage.removeItem('forestApp_focusSessions')
       localStorage.removeItem('taskFolders')
       localStorage.removeItem('focusSessionHistory')
+      localStorage.removeItem('jungleGenerations') // Add this line to clear all jungle data
     }
+    
+    console.log('✅ Profile reset complete - all data cleared including jungle generations');
   } catch (error) {
     console.error('Error resetting profile:', error)
     alert('Error resetting profile. Please try again.')
