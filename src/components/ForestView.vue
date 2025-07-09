@@ -1170,6 +1170,7 @@ const emit = defineEmits(['jungle-completed', 'jungle-changed']);
 const treeTypes = [
   { id: "fern", name: "Fern", image: "/fern.png", emoji: "🌿" },
   { id: "monstera", name: "Monstera", image: "/monstera.png", emoji: "🍃" },
+  { id: "monsteraThai", name: "Monstera Thai", image: "/monsteraThai.png", emoji: "🍃" },
   { id: "alocasia", name: "Alocasia", image: "/alocasia.png", emoji: "🌱" },
   { id: "philodendron", name: "Philodendron", image: "/philodendron.png", emoji: "🌱" },
   { id: "treee", name: "Oak Tree", image: "/treee.png", emoji: "🌳" },
@@ -1567,7 +1568,7 @@ const getGridCellSize = (treeCount) => {
 };
 
 const getTreeImageSize = (treeCount, treeType) => {
-  const isSmallTree = ["pothos", "monstera", "mushroom", "fern", "alocasia", "philodendron", "elefant", "caladium"].includes(
+  const isSmallTree = ["pothos", "monstera", "mushroom", "fern", "alocasia", "philodendron", "elefant", "caladium", "monsteraThai"].includes(
     treeType
   );
   const actualTreeCount = displayedTrees.value.length; // Use displayedTrees

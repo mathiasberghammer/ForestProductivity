@@ -33,7 +33,7 @@
             </div>
 
             <!-- Progress Ring -->
-            <div class="relative w-80 h-80 mx-auto ">
+            <div class="relative w-80 h-80 mx-auto">
               <svg
                 class="w-80 h-80 transform -rotate-90 drop-shadow-2xl"
                 viewBox="0 0 160 160"
@@ -186,28 +186,28 @@
               </div>
             </div>
 
-<!-- Slider -->
-<div class="relative px-6 mb-8">
-  <input
-    type="range"
-    v-model="selectedDuration"
-    :min="1 * 60 * 60"
-    :max="4 * 60 * 60"
-    :step="1 * 60 * 60"
-    class="w-full h-3 bg-stone-200 rounded-lg appearance-none cursor-pointer slider"
-    @input="updateTimeLeft"
-  />
+            <!-- Slider -->
+            <div class="relative px-6 mb-8">
+              <input
+                type="range"
+                v-model="selectedDuration"
+                :min="1 * 60 * 60"
+                :max="4 * 60 * 60"
+                :step="1 * 60 * 60"
+                class="w-full h-3 bg-stone-200 rounded-lg appearance-none cursor-pointer slider"
+                @input="updateTimeLeft"
+              />
 
-  <!-- Slider Labels -->
-  <div
-    class="flex justify-between text-xs text-stone-600 mt-2 px-2"
-  >
-    <span>1 hour</span>
-    <span>2 hours</span>
-    <span>3 hours</span>
-    <span>4 hours</span>
-  </div>
-</div>
+              <!-- Slider Labels -->
+              <div
+                class="flex justify-between text-xs text-stone-600 mt-2 px-2"
+              >
+                <span>1 hour</span>
+                <span>2 hours</span>
+                <span>3 hours</span>
+                <span>4 hours</span>
+              </div>
+            </div>
 
             <!-- Start Focus Button -->
             <div class="text-center">
@@ -392,6 +392,15 @@
         </div>
       </div>
     </div>
+    <!-- Debug Add Tree Button -->
+<div v-if="showDebugControls" class="text-center mt-4">
+  <button
+    @click="debugAddSingleTree"
+    class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 text-sm"
+  >
+    🌳 Add Tree (Debug)
+  </button>
+</div>
   </div>
 </template>
 
@@ -418,7 +427,7 @@ const props = defineProps({
 });
 
 // Reactive state
-const selectedDuration = ref(1 * 60 * 60); 
+const selectedDuration = ref(1 * 60 * 60);
 const timeLeft = ref(selectedDuration.value);
 const isRunning = ref(false);
 const treesGrownThisSession = ref(0);
@@ -429,16 +438,31 @@ let timerId = null;
 
 // Add these to your reactive state section:
 const showDebugControls = ref(true); // Set to false in production
+const debugAddSingleTree = () => {
+  console.log("🐛 Debug: Adding single tree");
 
+  const folderId =
+    selectedFolderId.value ||
+    (availableFolders.value.length > 0
+      ? availableFolders.value[0].id
+      : "debug");
 
-
+  emit("tree-grown", {
+    type: selectedTreeType.value,
+    treeType: selectedTreeType.value,
+    duration: 3600, // 1 hour tree
+    source: "debug",
+    folderId: folderId,
+    grownAt: new Date().toISOString(),
+  });
+};
 // Constants
 const circumference = 2 * Math.PI * 65; // radius = 65
 
 const selectedTreeType = ref("philodendron"); // Default tree type
 
 const treeTypes = [
-{
+  {
     id: "philodendron",
     name: "Philodendron",
     image: "/philodendron.png",
@@ -451,6 +475,13 @@ const treeTypes = [
     image: "/monstera.png",
     emoji: "🍃",
     description: "Bold and tropical",
+  },
+  {
+    id: "monsteraThai",
+    name: "Monstera Thai",
+    image: "/monsteraThai.png",
+    emoji: "🍃",
+    description: "Rare and exotic",
   },
   {
     id: "alocasia",
@@ -691,12 +722,12 @@ const startTimer = () => {
 
       // Check if a minute (60 seconds) has passed and grow a tree
       const elapsed = selectedDuration.value - timeLeft.value;
-const hoursCompleted = Math.floor(elapsed / 3600); // 1 hour = 3600 seconds
+      const hoursCompleted = Math.floor(elapsed / 3600); // 1 hour = 3600 seconds
 
-if (hoursCompleted > treesGrownThisSession.value) {
-  treesGrownThisSession.value = hoursCompleted;
-  growTree();
-}
+      if (hoursCompleted > treesGrownThisSession.value) {
+        treesGrownThisSession.value = hoursCompleted;
+        growTree();
+      }
     } else {
       finishSession();
     }
@@ -715,8 +746,8 @@ const stopTimer = () => {
 
   // If we focused for at least 1 minute, grow a tree and record the session
   if (elapsedTime >= 3600) {
-  // 1 hour = 3600 seconds
-  const treesToGrow = Math.floor(elapsedTime / 3600);
+    // 1 hour = 3600 seconds
+    const treesToGrow = Math.floor(elapsedTime / 3600);
 
     // Grow any remaining trees that haven't been grown yet
     for (let i = treesGrownThisSession.value; i < treesToGrow; i++) {
