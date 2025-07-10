@@ -375,7 +375,8 @@ const totalTrees = computed(() => {
 });
 const totalFocusHours = computed(() => Math.floor(totalFocusTime.value / 3600));
 const completedTasksCount = computed(() => {
-  return tasks.value.filter((task) => task.completed).length;
+  // Only count main tasks (not subtasks) in the total
+  return tasks.value.filter((task) => task.completed && !task.parentId).length;
 });
 
 // Navigation items
@@ -472,6 +473,7 @@ const handleTreeGrown = (treeData) => {
 };
 
 const handleTaskCreated = (taskData) => {
+  
   const newTask = {
     id: Date.now() + Math.random(),
     title: taskData.title,
@@ -479,8 +481,10 @@ const handleTaskCreated = (taskData) => {
     dueDate: taskData.dueDate || null,
     completed: false,
     completedAt: null,
+    parentId: taskData.parentId || null,
     createdAt: new Date().toISOString(),
   };
+  
   tasks.value.push(newTask);
   saveData();
 };
