@@ -265,6 +265,7 @@
                 @delete-subtask="deleteSubtask"
                 @move-up="() => moveTaskUp(task.id, index)"
                 @move-down="() => moveTaskDown(task.id, index)"
+                @create-recurring="createRecurringTask"
               />
               
               <div v-if="getCurrentWeekActiveTasks().length === 0" class="text-center py-12 text-stone-600">
@@ -766,6 +767,46 @@ const loadTaskOrder = () => {
     taskOrder.value = JSON.parse(saved)
   }
 }
+
+const createRecurringTask = (originalTask) => {
+  if (!originalTask.recurring?.enabled) return
+  
+  const { frequency, interval } = originalTask.recurring
+  const nextDueDate = calculateNextDueDate(originalTask.dueDate, frequency, interval)
+  
+  const newRecurringTask = {
+    title: originalTask.title,
+    folderId: originalTask.folderId,
+    dueDate: nextDueDate,
+    completed: false,
+    parentId: null,
+    recurring: { ...originalTask.recurring },
+    createdAt: new Date().toISOString()
+  }
+  
+  emit('task-created', newRecurringTask)
+  
+  console.log(`🔄 Created next recurring instance: "${originalTask.title}" for ${nextDueDate}`)
+}
+
+const calculateNextDueDate = (currentDueDate, frequency, interval) => {
+  const date = currentDueDate ? new Date(currentDueDate) : new Date()
+  
+  switch (frequency) {
+    case 'daily':
+      date.setDate(date.getDate() + interval)
+      break
+    case 'weekly':
+      date.setDate(date.getDate() + (interval * 7))
+      break
+    case 'monthly':
+      date.setMonth(date.getMonth() + interval)
+      break
+  }
+  
+  return date.toISOString().split('T')[0]
+}
+
 
 const formatDate = (dateString) => {
   const date = new Date(dateString)

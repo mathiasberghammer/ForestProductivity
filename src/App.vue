@@ -481,10 +481,12 @@ const handleTaskCreated = (taskData) => {
     dueDate: taskData.dueDate || null,
     completed: false,
     completedAt: null,
-    parentId: taskData.parentId || null,
+    parentId: taskData.parentId || null, // ✅ Preserve parentId for subtasks
+    recurring: taskData.recurring || null, // ✅ ADD THIS LINE - preserve recurring settings
     createdAt: new Date().toISOString(),
   };
   
+  console.log('New task object with all properties:', newTask); // Debug log
   tasks.value.push(newTask);
   saveData();
 };

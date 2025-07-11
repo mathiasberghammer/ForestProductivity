@@ -39,7 +39,7 @@
         <div class="flex-1 min-w-0">
           <div class="flex items-start justify-between gap-2">
             <div class="flex-1 min-w-0">
-              <!-- Title with subtask indicator -->
+              <!-- Title with indicators -->
               <div class="flex items-center gap-2">
                 <h3 
                   class="font-medium transition-all duration-200 leading-snug text-sm"
@@ -51,6 +51,16 @@
                 >
                   {{ task.title }}
                 </h3>
+                
+                <!-- Recurring indicator -->
+                <span 
+                  v-if="task.recurring && task.recurring.enabled" 
+                  class="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-medium"
+                  :title="getRecurringDescription()"
+                >
+                  <span>🔄</span>
+                  {{ getRecurringShortLabel() }}
+                </span>
                 
                 <!-- Subtask count indicator -->
                 <span 
@@ -120,7 +130,7 @@
                 </svg>
               </button>
 
-              <!-- Add Subtask (only for non-archived) -->
+              <!-- Add Subtask -->
               <button
                 v-if="!isArchived"
                 @click="toggleAddSubtask"
@@ -132,7 +142,7 @@
                 </svg>
               </button>
 
-              <!-- Edit (only for non-archived) -->
+              <!-- Edit -->
               <button
                 v-if="!isArchived"
                 @click="startEdit"
@@ -161,7 +171,7 @@
 
       <!-- Edit Form -->
       <div v-if="isEditing" class="mt-3 pt-3 border-t border-white/50">
-        <div class="space-y-2">
+        <div class="space-y-3">
           <input
             v-model="editTitle"
             @keyup.enter="saveEdit"
@@ -176,6 +186,47 @@
             type="date"
             class="w-full p-2 bg-white/80 backdrop-blur-sm border border-white/60 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none text-stone-900 text-sm"
           >
+
+          <!-- Recurring Options -->
+          <div class="bg-white/60 rounded-lg p-3 border border-white/40">
+            <div class="flex items-center gap-2 mb-3">
+              <input
+                v-model="editRecurring.enabled"
+                type="checkbox"
+                id="recurring-enabled"
+                class="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
+              >
+              <label for="recurring-enabled" class="text-sm font-medium text-stone-700">
+                🔄 Make this a recurring task
+              </label>
+            </div>
+
+            <div v-if="editRecurring.enabled" class="space-y-2">
+              <div class="grid grid-cols-2 gap-2">
+                <select 
+                  v-model="editRecurring.frequency" 
+                  class="p-2 bg-white/80 border border-white/60 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+                
+                <input
+                  v-model.number="editRecurring.interval"
+                  type="number"
+                  min="1"
+                  max="30"
+                  class="p-2 bg-white/80 border border-white/60 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                  placeholder="Every X..."
+                >
+              </div>
+              
+              <div class="text-xs text-stone-600 bg-stone-100 p-2 rounded">
+                <strong>Preview:</strong> {{ getRecurringPreview() }}
+              </div>
+            </div>
+          </div>
 
           <div class="flex gap-2">
             <button
@@ -291,12 +342,17 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['update', 'delete', 'unarchive', 'create-subtask', 'update-subtask', 'delete-subtask', 'move-up', 'move-down'])
+const emit = defineEmits(['update', 'delete', 'unarchive', 'create-subtask', 'update-subtask', 'delete-subtask', 'move-up', 'move-down', 'create-recurring'])
 
 // Reactive state
 const isEditing = ref(false)
 const editTitle = ref('')
 const editDueDate = ref('')
+const editRecurring = ref({
+  enabled: false,
+  frequency: 'weekly',
+  interval: 1
+})
 const editInput = ref(null)
 const showAddSubtask = ref(false)
 const newSubtaskTitle = ref('')
@@ -376,6 +432,52 @@ const formatCompletionDate = (dateString) => {
   })
 }
 
+const getRecurringShortLabel = () => {
+  if (!props.task.recurring?.enabled) return ''
+  
+  const { frequency, interval } = props.task.recurring
+  
+  if (frequency === 'daily') {
+    return interval === 1 ? 'Daily' : `${interval}d`
+  } else if (frequency === 'weekly') {
+    return interval === 1 ? 'Weekly' : `${interval}w`
+  } else if (frequency === 'monthly') {
+    return interval === 1 ? 'Monthly' : `${interval}m`
+  }
+  
+  return 'Recurring'
+}
+
+const getRecurringDescription = () => {
+  if (!props.task.recurring?.enabled) return ''
+  
+  const { frequency, interval } = props.task.recurring
+  
+  if (frequency === 'daily') {
+    return interval === 1 ? 'Repeats every day' : `Repeats every ${interval} days`
+  } else if (frequency === 'weekly') {
+    return interval === 1 ? 'Repeats every week' : `Repeats every ${interval} weeks`
+  } else if (frequency === 'monthly') {
+    return interval === 1 ? 'Repeats every month' : `Repeats every ${interval} months`
+  }
+  
+  return 'Recurring task'
+}
+
+const getRecurringPreview = () => {
+  const { frequency, interval } = editRecurring.value
+  
+  if (frequency === 'daily') {
+    return interval === 1 ? 'This task will repeat every day' : `This task will repeat every ${interval} days`
+  } else if (frequency === 'weekly') {
+    return interval === 1 ? 'This task will repeat every week' : `This task will repeat every ${interval} weeks`
+  } else if (frequency === 'monthly') {
+    return interval === 1 ? 'This task will repeat every month' : `This task will repeat every ${interval} months`
+  }
+  
+  return 'This task will repeat'
+}
+
 const toggleComplete = () => {
   const updatedTask = {
     ...props.task,
@@ -394,6 +496,11 @@ const toggleComplete = () => {
         })
       }
     })
+    
+    // If this is a recurring task, create the next instance
+    if (props.task.recurring?.enabled) {
+      emit('create-recurring', props.task)
+    }
   }
 
   emit('update', updatedTask)
@@ -410,6 +517,18 @@ const unarchiveTask = () => {
 const startEdit = async () => {
   editTitle.value = props.task.title
   editDueDate.value = props.task.dueDate || ''
+  
+  // Initialize recurring settings
+  if (props.task.recurring) {
+    editRecurring.value = { ...props.task.recurring }
+  } else {
+    editRecurring.value = {
+      enabled: false,
+      frequency: 'weekly',
+      interval: 1
+    }
+  }
+  
   isEditing.value = true
   
   await nextTick()
@@ -419,12 +538,14 @@ const startEdit = async () => {
 const saveEdit = () => {
   if (!editTitle.value.trim()) return
 
-  emit('update', {
+  const updatedTask = {
     ...props.task,
     title: editTitle.value.trim(),
-    dueDate: editDueDate.value || null
-  })
-  
+    dueDate: editDueDate.value || null,
+    recurring: editRecurring.value.enabled ? { ...editRecurring.value } : null
+  }
+
+  emit('update', updatedTask)
   isEditing.value = false
 }
 
@@ -432,6 +553,11 @@ const cancelEdit = () => {
   isEditing.value = false
   editTitle.value = ''
   editDueDate.value = ''
+  editRecurring.value = {
+    enabled: false,
+    frequency: 'weekly',
+    interval: 1
+  }
 }
 
 const deleteTask = () => {
