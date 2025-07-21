@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "A minimalist productivity app with tree growth gamification.",
+  "author": "Your Name",
+  "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build && electron-builder",
@@ -26,27 +29,24 @@
     "vite-plugin-electron-renderer": "^0.14.5",
     "vue-tsc": "^2.0.26"
   },
-  "main": "dist-electron/main.js",
   "build": {
-  "appId": "com.yourcompany.forestapp",
-  "productName": "Forest Productivity",
-  "files": [
-    "dist",
-    "dist-electron"
-  ],
-  "description": "A minimalist productivity app with tree growth gamification.",
-"author": "Your Name",
-  "directories": {
-    "buildResources": "public"
-  },
-  "mac": {
-    "icon": "public/icon.png"
-  },
-  "win": {
-    "icon": "public/icon.png"
-  },
-  "linux": {
-    "icon": "public/icon.png"
+    "appId": "com.yourcompany.forestapp",
+    "productName": "Forest Productivity",
+    "files": [
+      "dist",
+      "dist-electron"
+    ],
+    "directories": {
+      "buildResources": "public"
+    },
+    "mac": {
+      "icon": "public/icon.png"
+    },
+    "win": {
+      "icon": "public/icon.png"
+    },
+    "linux": {
+      "icon": "public/icon.png"
+    }
   }
-}
 }

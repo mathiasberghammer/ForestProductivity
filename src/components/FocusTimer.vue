@@ -392,7 +392,7 @@
         </div>
       </div>
     </div>
-    <!-- Debug Add Tree Button -->
+    <!-- Debug Add Tree Button 
 <div v-if="showDebugControls" class="text-center mt-4">
   <button
     @click="debugAddSingleTree"
@@ -400,7 +400,7 @@
   >
     🌳 Add Tree (Debug)
   </button>
-</div>
+</div>-->
   </div>
 </template>
 

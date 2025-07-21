@@ -1568,7 +1568,7 @@ const getGridCellSize = (treeCount) => {
 };
 
 const getTreeImageSize = (treeCount, treeType) => {
-  const isSmallTree = ["pothos", "monstera", "mushroom", "fern", "alocasia", "philodendron", "elefant", "caladium", "monsteraThai"].includes(
+  const isSmallTree = ["pothos", "monstera", "mushroom", "fern", "alocasia", "philodendron", "elefant", "caladium", "monsteraThai", "peperomia"].includes(
     treeType
   );
   const actualTreeCount = displayedTrees.value.length; // Use displayedTrees
